@@ -181,21 +181,23 @@ class _DRPcoX(DispatchBaseClass):
         return self._oleobj_.InvokeTypes(21, LCID, 1, (3, 0), ((8, 0),),FileName
             )
 
-    #def ReadTag(self, Name=defaultNamedNotOptArg, pBuf=defaultNamedNotOptArg, nOS=defaultNamedNotOptArg, nWords=defaultNamedNotOptArg):
-    #    return self._oleobj_.InvokeTypes(9, LCID, 1, (3, 0), ((8, 0), (16388, 0), (3, 0), (3, 0)),Name
-    #        , pBuf, nOS, nWords)
-    # Hex tag is 0x44?  We want it to be of type VTS_PR4
     def ReadTag(self, Name=defaultNamedNotOptArg, pBuf=defaultNamedNotOptArg, nOS=defaultNamedNotOptArg, nWords=defaultNamedNotOptArg):
-        return self._oleobj_.InvokeTypes(9, LCID, 1, (3, 0), ((8, 0), (68, 0), (3, 0), (3, 0)),Name
+        return self._oleobj_.InvokeTypes(9, LCID, 1, (3, 0), ((8, 0), (16388, 0), (3, 0), (3, 0)),Name
             , pBuf, nOS, nWords)
+         # Hex tag is 0x44?  We want it to be of type VTS_PR4
+
+    # For ReadTagV and ReadTagVEX, the default output of makepy is to use
+    # _ApplyTypes_ to pass the data through _get_good_object_.  This function
+    # slows down the I/O significantly, so we just call InvokeTypes directly.
+    #
+    # This is a hand-edited version of the makepy output.
 
     def ReadTagV(self, Name=defaultNamedNotOptArg, nOS=defaultNamedNotOptArg, nWords=defaultNamedNotOptArg):
-        return self._ApplyTypes_(14, 1, (12, 0), ((8, 0), (3, 0), (3, 0)), u'ReadTagV', None,Name
-            , nOS, nWords)
+        return self._oleobj_.InvokeTypes(14, 0, 1, (12, 0), ((8, 0), (3, 0), (3, 0)), Name , nOS, nWords)
 
     def ReadTagVEX(self, Name=defaultNamedNotOptArg, nOS=defaultNamedNotOptArg, nWords=defaultNamedNotOptArg, SrcType=defaultNamedNotOptArg
             , DstType=defaultNamedNotOptArg, nChans=defaultNamedNotOptArg):
-        return self._ApplyTypes_(25, 1, (12, 0), ((8, 0), (3, 0), (3, 0), (8, 0), (8, 0), (3, 0)), u'ReadTagVEX', None,Name
+        return self._oleobj_.InvokeTypes(25, 0, 1, (12, 0), ((8, 0), (3, 0), (3, 0), (8, 0), (8, 0), (3, 0)), Name
             , nOS, nWords, SrcType, DstType, nChans
             )
 
