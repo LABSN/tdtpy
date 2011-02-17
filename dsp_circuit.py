@@ -179,12 +179,14 @@ class DSPCircuit(object):
         '''
         Analogue of RPco.X.Run
         '''
+        log.debug("starting %s", self)
         self._iface.Run()
 
     def stop(self):
         '''
         Analogue of RPco.X.Halt
         '''
+        log.debug("stopping %s", self)
         self._iface.Halt()
 
     def trigger(self, trigger, mode='pulse'):
