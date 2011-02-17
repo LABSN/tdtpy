@@ -2,10 +2,13 @@ import os
 import numpy as np
 import ctypes
 
-from comtypes import client
-#import actxobjects
+#import comtypes.client
+# To use comptypes, zbus = comtypes.client.CreateObject('ZBUS.x')
 #import win32com.client
-    
+# To use win32com, zbus = win32com.client.Dispatch('ZBUS.X')
+import actxobjects
+# To use actxobjects, zbus = actxobjects.ZBUSx()
+
 from dsp_error import DSPError
 
 import logging
@@ -26,9 +29,8 @@ def connect_zbus():
     '''
     Connect to the zBUS interface and set zBUS triggeres to low
     '''
-    #zbus = actxobjects.ZBUSx()
-    #zbus = win32com.client.Dispatch('ZBUS.X')
-    zbus = client.CreateObject('ZBUS.X')
+    zbus = actxobjects.ZBUSx()
+    #zbus = comtypes.client.CreateObject('ZBUS.x')
     if not zbus.ConnectZBUS(INTERFACE):
         raise DSPError("zBUS", "Connection failed")
     log.info("Connected to zBUS")
@@ -46,9 +48,8 @@ def connect(name, ID=1):
     Connect to device
     '''
     debug_string = '%s %d via %s interface' % (name, ID, INTERFACE)
-    #driver = getattr(actxobjects, DRIVERS[name])()
-    #driver = win32com.client.Dispatch('RPco.X')
-    driver = client.CreateObject('RPco.X')
+    driver = getattr(actxobjects, DRIVERS[name])()
+    #driver = comtypes.client.CreateObject('RPCo.X')
     if not getattr(driver, 'Connect%s' % name)(INTERFACE, ID):
         raise DSPError(name, "Connection failed")
     log.info("Connected to %s", name)

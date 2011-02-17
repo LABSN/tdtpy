@@ -57,6 +57,7 @@ class TestBufferRead(unittest.TestCase):
 
     def assertValid(self, buffer):
         self.circuit.trigger(1)
+        time.sleep(0.1)
         data = buffer.read()
         self.assertShape(data)
         self.assertSeqSamples(data, buffer.resolution)
