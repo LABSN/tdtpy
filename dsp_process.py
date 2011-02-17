@@ -86,7 +86,7 @@ class DSPProcess(mp.Process):
     '''
     This is a duck-typed class meant to support the methods available on
     DSPCircuit.  It does not subclass DSPCircuit, but supports all the key
-    methods you need (e.g.  get_tag, set_tag, get_buffer).
+    methods you need (e.g. get_tag, set_tag, get_buffer).
 
     The only key difference is that you must ensure that shared memory for the
     process is allocated before you start it.  This means you must call

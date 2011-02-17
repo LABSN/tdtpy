@@ -1,6 +1,6 @@
 import logging
 log = logging.getLogger(__name__)
-log.setLevel(logging.WARN)
+log.setLevel(logging.DEBUG)
 
 import numpy as np
 from array import array
@@ -299,6 +299,7 @@ class WriteableDSPBuffer(DSPBuffer):
         # it to a Python array first (seems fast enough).  The 'd' flag is the
         # Python array typecode for a float32 value (which is required by the
         # COM wrapper).
+        log.debug("%s: write %d samples at %d", self, len(data), offset)
         data = array('d', data)
         return self._iface.WriteTagV(self.data_tag, offset, data)
 
