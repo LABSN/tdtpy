@@ -25,7 +25,7 @@ class SharedRingBuffer(AbstractRingBuffer):
         return self._iread.value
 
     def _set_read_index(self, value):
-        self._iread.value = value
+        self._iread.value = int(value)
 
     read_index = property(_get_read_index, _set_read_index)
 
@@ -33,7 +33,7 @@ class SharedRingBuffer(AbstractRingBuffer):
         return self._iwrite.value
 
     def _set_write_index(self, value):
-        self._iwrite.value = value
+        self._iwrite.value = int(value)
 
     write_index = property(_get_write_index, _set_write_index)
 
