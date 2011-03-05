@@ -1,6 +1,6 @@
 import logging
 log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 
 import numpy as np
 from array import array
@@ -26,6 +26,8 @@ class DSPBuffer(AbstractRingBuffer):
                  sf_tag=None, cycle_tag=None, dec_tag=None, block_size=4096,
                  src_type='float32', dest_type='float32', channels=1):
         '''
+        Given the circuit object and tag name, return a buffer object
+
         In addition to the required tag, takes a number of supporting tags
 
         For consistency, give the supporting tags the same name as the data tag
@@ -74,8 +76,8 @@ class DSPBuffer(AbstractRingBuffer):
             but you only sample every 25 cycles, the actual sampling frequency
             is 4 kHz.  
             
-        Parameters
-        ----------
+        Additional Parameters
+        ----------------------
         circuit
             Circuit object buffer is attached to
         block_size : int
@@ -88,7 +90,56 @@ class DSPBuffer(AbstractRingBuffer):
             Type to convert data to
         channels :
             Number of channels stored in buffer
+
+        Available Attributes
+        --------------------
+        data_tag, idx_tag, size_tag, sf_tag, cycle_tag, dec_tag :
+            Names of supporting tags present in the circuit (both the names
+            provided as well as the ones automatically discovered when the
+            buffer is created.  None if the tag is not present.
+        src_type
+            Numpy dtype of the data stored on the device
+        dest_type
+            Numpy dtype that the buffer returns
+        compression
+            Number of samples stored in a single 32-bit "slot" on the device.
+            For example, if you are using the MCFloat2Int8 to convert four
+            samples of data into 8-bit integers and storing these four samples
+            as a single 32-bit work, the compression factor is 4.
+        sf
+            Scaling factor of the data
+        resolution
+            If data is being compressed, computes the actual resolution of the
+            acquired data given the scaling factor.  For example, if you are
+            compressing data into an 8-bit integer using a scaling factor of 10,
+            then the resolution of the acquired data will be 0.1 since numbers
+            will get rounded to the nearest tenth (e.g. 0.183 will get rounded
+            to 0.2).
+        dec_factor
+            Also called the "downsampling rate".  Indicates the number of device
+            cycles before a sample is acquired and stored in the buffer.  If 1,
+            a sample is acquired on every cycle.  If 2, a sample is acquired on
+            every other cycle.
+        fs
+            Sampling frequency of data stored in buffer.  This is basically the
+            sampling frequency of the device divided by the decimation factor
+            (dec_factor): e.g. if a sample is acquired only on every other cycle,
+            then the sampling frequency of the buffer is effectively half of the
+            device clock rate.
+        n_slots
+            Size of the buffer in 32-bit words
+        n_samples
+            Number of samples the buffer can hold (summed across all channels)
+        size
+            Number of samples the buffer can hold in a single channel
+
+        n_slots_max
+        n_samples_max
+        size_max
+        channels
+        block_size
         '''
+
         if data_tag not in circuit.tags:
             mesg = "%s: Does not have data tag %s" % (circuit, data_tag)
             raise ValueError, mesg
