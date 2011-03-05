@@ -167,9 +167,15 @@ class DSPProcess(mp.Process):
         self._shared_buffer_data.append(data)
         cache = shmem_as_ndarray(shmem).reshape((buffer.channels, -1))
         if mode == 'r':
-            return ReadableSharedRingBuffer(cache, iwrite, iread)
+            sh_buffer = ReadableSharedRingBuffer(cache, iwrite, iread)
         elif mode == 'w':
-            return WriteableSharedRingBuffer(cache, iwrite, iread)
+            sh_buffer = WriteableSharedRingBuffer(cache, iwrite, iread)
+
+        # Copy the attributes over from the actual buffer to the shared buffer
+        # so we have access to the metadata we need
+        for k, v in buffer.attributes().items():
+            setattr(sh_buffer, k, v)
+        return sh_buffer
 
     def get_tag(self, name):
         return self._get_response('get_tag', (name,))
