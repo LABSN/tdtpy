@@ -321,7 +321,7 @@ class DSPBuffer(AbstractRingBuffer):
 
     def __repr__(self):
         return "<{0}:{1}:{2}:{3}>".format(self.circuit, self.data_tag,
-                self.index, self.size)
+                self.write_index, self.size)
 
 class ReadableDSPBuffer(DSPBuffer):
 
