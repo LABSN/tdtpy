@@ -8,10 +8,6 @@ class SharedRingBuffer(AbstractRingBuffer):
     (i.e. only one process can do the reading).
 
     Cache *must* be a view into a Numpy array.  use shmem_to_ndarray and reshape
-
-    TODO:
-        enforce directionality (i.e. you must read from one process, write from
-        the other, you cannot do both)
     '''
 
     def __init__(self, cache, iwrite, iread):
@@ -38,7 +34,7 @@ class SharedRingBuffer(AbstractRingBuffer):
     write_index = property(_get_write_index, _set_write_index)
 
     def _read(self, offset, length):
-        return self._cache[...,offset:offset+length]
+        return self._cache[..., offset:offset+length]
 
     def _write(self, offset, data):
         samples = data.shape[-1]

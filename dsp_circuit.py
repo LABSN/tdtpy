@@ -34,13 +34,13 @@ RX6_DEFAULTS = {
 
 class DSPCircuit(object):
 
-    def __init__(self, circuit_name, device, load=True):
-        self.device = device
+    def __init__(self, circuit_name, device_name, load=True):
+        self.device_name = device_name
         self.circuit_name = circuit_name
         # _iface is the same COM object a Matlab user typically works with when
         # they call actxserver('RPco.X').  It supports the exact same methods as
         # the Matlab version.
-        self._iface = connect(device)
+        self._iface = connect(device_name)
         self._zbus  = connect_zbus()
         self._cof_path = get_cof_path(circuit_name)
         if load:
@@ -68,7 +68,7 @@ class DSPCircuit(object):
         Loads the state and reconnects the COM objects
         '''
         self.__dict__.update(state)
-        self._iface = connect(self.device)
+        self._iface = connect(self.device_name)
         self._zbus  = connect_zbus()
         self.read()
 
@@ -209,4 +209,4 @@ class DSPCircuit(object):
             return ReadableDSPBuffer(self, data_tag, *args, **kw)
 
     def __str__(self):
-        return "{0}:{1}".format(self.device, self.circuit_name)
+        return "{0}:{1}".format(self.device_name, self.circuit_name)
