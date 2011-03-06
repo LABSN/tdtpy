@@ -22,11 +22,11 @@ class TestPickling(unittest.TestCase):
         with open(self.buffer_file, 'w') as fh:
             pickle.dump(self.buffer, fh)
 
-    #def test_persist(self):
-    #    with open(self.circuit_file, 'r') as fh:
-    #        circuit = pickle.load(fh)
-    #    with open(self.buffer_file, 'r') as fh:
-    #        buffer = pickle.load(fh)
+    def test_persist(self):
+        with open(self.circuit_file, 'r') as fh:
+            circuit = pickle.load(fh)
+        with open(self.buffer_file, 'r') as fh:
+            buffer = pickle.load(fh)
 
     def tearDown(self):
         remove(self.circuit_file)
@@ -39,7 +39,6 @@ class TestBufferRead(unittest.TestCase):
         self.circuit.set_tag('nHi', 4)
         self.circuit.start()
         self.shape = (4, 4)
-        #time.sleep(0.5)
 
     def tearDown(self):
         self.circuit.stop()
@@ -158,11 +157,11 @@ class TestBufferWrite(unittest.TestCase):
 
 class TestCOMWrapper(unittest.TestCase):
 
-    def test_comtypes(self):
-        from comtypes import client
-        iface = client.CreateObject('RPco.X')
-        self.assertWrite(iface)
-        self.assertWrite(iface)
+    #def test_comtypes(self):
+    #    from comtypes import client
+    #    iface = client.CreateObject('RPco.X')
+    #    self.assertWrite(iface)
+    #    self.assertWrite(iface)
 
     def test_win32com(self):
         from win32com import client
@@ -190,6 +189,12 @@ class TestCOMWrapper(unittest.TestCase):
 
         written = iface.ReadTagV('speaker', 0, len(data))
         assert_array_almost_equal(written, data)
+
+class TestProcess(unittest.TestCase):
+
+    def setUp(self):
+        process = DSPProcess()
+        circuit_1 = process.load_circuit('components/test_physiology_RZ6')
 
 if __name__ == '__main__':
     unittest.main() 
