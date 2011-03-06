@@ -2,17 +2,55 @@ from dsp_process import DSPProcess
 import time
 
 def main():
-    #process = DSPProcess('test_physiology', 'RZ5', 0.1, 30)
-    process = DSPProcess('physiology', 'RZ5', 0.1, 30)
-    processed_buffer = process.get_buffer('processed', 'r', channels=16,
-            block_size=1024)
-    raw_buffer = process.get_buffer('raw', 'r', channels=16, block_size=1024)
+    process = DSPProcess()
+    circuit = process.load_circuit('components/test_physiology_RZ5', 'RZ5')
+    #processed_buffer = circuit.get_buffer('processed', 'r', channels=16)
+    raw_buffer = circuit.get_buffer('raw', 'r', channels=16, block_size=4098)
+    print "BUFFER SIZE", raw_buffer.size
+
     process.start()
 
-    time.sleep(5)
-    data = raw_buffer.read()
+    last_ctime = 0
+
+    read = 0
+    time.sleep(2)
+    shape = raw_buffer.read().shape
+    read += shape[-1]
+    print shape
+    ctime = circuit.get_tag('zTime')
+    print ctime, ctime-last_ctime
+    last_ctime=ctime
+    time.sleep(2)
+    shape = raw_buffer.read().shape
+    read += shape[-1]
+    print shape
+    ctime = circuit.get_tag('zTime')
+    print ctime, ctime-last_ctime
+    last_ctime=ctime
+    time.sleep(2)
+    shape = raw_buffer.read().shape
+    read += shape[-1]
+    print shape
+    ctime = circuit.get_tag('zTime')
+    print ctime, ctime-last_ctime
+    last_ctime=ctime
+    time.sleep(2)
+    shape = raw_buffer.read().shape
+    read += shape[-1]
+    print shape
+    ctime = circuit.get_tag('zTime')
+    print ctime, ctime-last_ctime
+    last_ctime=ctime
+    circuit.stop()
+    time.sleep(2)
+    shape = raw_buffer.read().shape
+    read += shape[-1]
+    print shape
+    print "Samples read", read
+    ctime = circuit.get_tag('zTime')
+    print ctime, ctime-last_ctime
+    last_ctime=ctime
     process.terminate()
-    print 'terminate'
     
     #from pylab import *
     #print 'import'
