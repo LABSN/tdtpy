@@ -323,6 +323,10 @@ class DSPBuffer(AbstractRingBuffer):
         return "<{0}:{1}:{2}:{3}>".format(self.circuit, self.data_tag,
                 self.write_index, self.size)
 
+    def clear(self):
+        '''Set buffer to zero'''
+        self._iface.ZeroTag(self.data_tag)
+
 class ReadableDSPBuffer(DSPBuffer):
 
     def _get_write_index(self):
