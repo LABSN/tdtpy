@@ -169,7 +169,7 @@ class TestCOMWrapper(unittest.TestCase):
         self.assertWrite(iface)
         self.assertWrite(iface)
 
-    def test_custom(self):
+    def test_custom_actxobject(self):
         from actxobjects import RPcoX
         iface = RPcoX()
         self.assertWrite(iface)
