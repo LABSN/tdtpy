@@ -38,9 +38,12 @@ def monitor(circuit_info, poll_period, pipe):
             sw_buffer.write(data)
 
     def write_buffer(hw_buffer, sw_buffer):
-        if hw_buffer.available() and sw_buffer.pending():
+        if sw_buffer.should_set():
+            data = sw_buffer.read()
+            hw_buffer.set(data)
+            sw_buffer._ioffset.value = -1
+        elif hw_buffer.available() and sw_buffer.pending():
             samples = hw_buffer.available()
-            data = sw_buffer.read(samples)
             hw_buffer.write(data)
 
     ##############################################################################
@@ -65,24 +68,23 @@ def monitor(circuit_info, poll_period, pipe):
             shmem = info['shmem']
             iwrite = info['iwrite']
             iread = info['iread']
+            ioffset = info['ioffset']
+            lock = info['lock']
 
             hw_buffer = circuit.get_buffer(buffer_name, mode, *args, **kwargs)
             cache = shmem_as_ndarray(shmem).reshape((hw_buffer.channels, -1))
-            iwrite.value = 0
-            iread.value = 0
 
             # The mode refers to the hardware buffer itself.  If we want to read
             # from the hardware buffer, then we need to write the data to the shared
             # memory via a WriteableSharedRingBuffer.  The other process will be
             # viewing the same memory space via a ReadableSharedRingBuffer.
+            args = cache, iwrite, iread, ioffset, lock
             if mode == 'r':
-                sw_buffer = WriteableSharedRingBuffer(cache, iwrite, iread)
+                sw_buffer = WriteableSharedRingBuffer(*args)
                 read_buffers.append((hw_buffer, sw_buffer))
             elif mode == 'w':
-                sw_buffer = ReadableSharedRingBuffer(cache, iwrite, iread)
+                sw_buffer = ReadableSharedRingBuffer(*args)
                 write_buffers.append((hw_buffer, sw_buffer))
-            print "HW BUFFER", hw_buffer.size
-            print "SW BUFFER", sw_buffer.size
 
         # Ok, now that we've initialized all the buffers for this circuit, it's
         # safe to start it.  Very important!  If you are running code that
@@ -162,25 +164,28 @@ class DSPProcess(mp.Process):
         shmem = mp.RawArray(mem_type, cache_size) 
         iwrite = mp.Value(ctypes.c_uint)
         iread = mp.Value(ctypes.c_uint)
-        #iwrite = mp.RawValue(ctypes.c_uint)
-        #iread = mp.RawValue(ctypes.c_uint)
+        ioffset = mp.Value(ctypes.c_int)
+
+        # Reentrant lock
+        lock = mp.RLock()
 
         # Save the information we need for reinitializing the buffer once the
         # process launches
         info = dict(circuit_name=circuit.circuit_name,
                 device=circuit.device_name, buffer_name=buffer_name, mode=mode,
                 args=args, kwargs=kwargs, shmem=shmem, iwrite=iwrite,
-                iread=iread)
+                iread=iread, ioffset=ioffset, lock=lock)
         key = (circuit.circuit_name, circuit.device_name)
         self._circuit_info[key].append(info)
 
         # Initialize the shared memory space for storing data acquired from the
         # DSP hardware
         cache = shmem_as_ndarray(shmem).reshape((buffer.channels, -1))
+        args = cache, iwrite, iread, ioffset, lock
         if mode == 'r':
-            sh_buffer = ReadableSharedRingBuffer(cache, iwrite, iread)
+            sh_buffer = ReadableSharedRingBuffer(*args)
         elif mode == 'w':
-            sh_buffer = WriteableSharedRingBuffer(cache, iwrite, iread)
+            sh_buffer = WriteableSharedRingBuffer(*args)
 
         # Copy the attributes over from the actual buffer to the shared buffer
         # so we have access to the metadata we need
