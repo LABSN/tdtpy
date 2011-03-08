@@ -5,6 +5,7 @@ from util import get_cof_path, connect_zbus, connect
 from dsp_buffer import ReadableDSPBuffer, WriteableDSPBuffer
 from convert import convert
 from dsp_error import DSPError
+from constants import RCX_COEFFICIENT
 
 import logging
 log = logging.getLogger(__name__)
@@ -152,6 +153,21 @@ class DSPCircuit(object):
             mesg = "Unable to set tag %s to %r" % (name, value)
             raise DSPError(self, mesg)
         log.info("Set %s:%s to %r", self, name, value)
+
+    def set_coefficients(self, name, value):
+        tag_size, tag_type = self.tags[name]
+        if tag_type != RCX_COEFFICIENT:
+            raise DSPError(self, "Tag %s is not a coefficient buffer" % name)
+        if tag_size != len(value):
+            mesg = "Exactly %d values must be written to tag %s"
+            raise DSPError(self, mesg % (tag_size, name))
+        # Per conversation with TDT's tech support (Mark Hanus and Chris
+        # Walters), RPvds' CoefLoad appears to be broken.  It's not clear
+        # whether there are plans to fix this in future releases.  They
+        # indicated we should connect a tag directly to the coefficient buffer
+        # and use WriteTagV.  Coefficients must be a 1D array (even for matrix
+        # multiplication operations.
+        self._iface.WriteTagV(name, 0, value)
 
     def start(self):
         '''
