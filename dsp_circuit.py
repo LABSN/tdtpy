@@ -10,28 +10,6 @@ import logging
 log = logging.getLogger(__name__)
 log.setLevel(logging.WARN)
 
-# There are apparently two more possible return values: 74 and 78.  It's not
-# clear what these represent. 
-rpcox_types = {
-        65:     object,         # Undefined type
-        68:     np.ndarray,     # Data buffer
-        73:     int,
-        83:     float,
-        80:     np.ndarray,     # Coefficient buffer
-        76:     bool,
-        }
-
-# Eventually I'd like to bind the device-specific variables as "constants" on
-# the correct DSPCircuit so people can leverage these in their programs rather
-# than having to look up the correct channel.  However, we need to compile a
-# list of all the necessary module-level variables first.
-RX6_DEFAULTS = {
-        'DAC_CHANNEL_1':    1,
-        'DAC_CHANNEL_2':    2,
-        'ADC_CHANNEL_1':    128,
-        'ADC_CHANNEL_2':    129,
-        }
-
 class DSPCircuit(object):
 
     def __init__(self, circuit_name, device_name, load=True):
@@ -111,7 +89,7 @@ class DSPCircuit(object):
                     mesg = "Attempted to initialize invalid tag %s" % name
                     raise DSPError(self, mesg)
                 tag_type = self._iface.GetTagType(name)
-                self.tags[name] = (tag_size, rpcox_types[tag_type])
+                self.tags[name] = (tag_size, tag_type)
                 log.info("%s: found %s (size %d, type %s)", self, name,
                           tag_size, tag_type)
         self.fs = self._iface.GetSFreq()
