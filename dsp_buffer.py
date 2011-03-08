@@ -385,7 +385,7 @@ class WriteableDSPBuffer(DSPBuffer):
             mesg = "buffer size cannot be configured"
             raise DSPError(self, mesg)
 
-        data = array('d', data)
+        #data = array('d', data)
         #if not self._iface.WriteTagVEX(self.data_tag, 0, 'F32', data):
         if self.vex_src_type != 'F32':
             raise NotImplementedError
