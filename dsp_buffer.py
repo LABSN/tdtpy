@@ -8,6 +8,7 @@ from array import array
 from util import dtype_to_type_str, best_sf, resolution
 from dsp_error import DSPError
 
+from constants import RCX_BUFFER
 from abstract_ring_buffer import AbstractRingBuffer 
 
 class DSPBuffer(AbstractRingBuffer):
@@ -143,6 +144,8 @@ class DSPBuffer(AbstractRingBuffer):
         if data_tag not in circuit.tags:
             mesg = "%s: Does not have data tag %s" % (circuit, data_tag)
             raise ValueError, mesg
+        elif not circuit.tags[data_tag][1] == RCX_BUFFER:
+            raise ValueError, "Tag %s is not a buffer tag" % data_tag
 
         self.circuit = circuit
         self._iface = circuit._iface
