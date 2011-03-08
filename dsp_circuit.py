@@ -15,9 +15,9 @@ class DSPCircuit(object):
     def __init__(self, circuit_name, device_name, load=True):
         self.device_name = device_name
         self.circuit_name = circuit_name
-        # _iface is the same COM object a Matlab user typically works with when
-        # they call actxserver('RPco.X').  It supports the exact same methods as
-        # the Matlab version.
+        # Hint for Matlab users: _iface is the same COM object a Matlab user
+        # typically works with when they call actxserver('RPco.X').  It supports
+        # the exact same methods as the Matlab version.
         self._iface = connect(device_name)
         self._zbus  = connect_zbus()
         self._cof_path = get_cof_path(circuit_name)
@@ -177,7 +177,7 @@ class DSPCircuit(object):
         elif (1 <= trigger < 10) and mode == 'pulse':
             self._iface.SoftTrg(trigger)
         else:
-            raise ValueError("Unsupported trigger mode %s %s", trigger, mode)
+            raise ValueError, "Unsupported trigger mode %s %s" % (trigger, mode)
         log.info('Trigger %r %s', trigger, mode)
 
     def get_buffer(self, data_tag, mode, *args, **kw):
