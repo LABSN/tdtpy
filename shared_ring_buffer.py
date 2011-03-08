@@ -10,12 +10,18 @@ class SharedRingBuffer(AbstractRingBuffer):
     Cache *must* be a view into a Numpy array.  use shmem_to_ndarray and reshape
     '''
 
-    def __init__(self, cache, iwrite, iread):
+    def __init__(self, cache, iwrite, iread, ioffset, lock):
+        self._ioffset = ioffset
         self._iwrite = iwrite
         self._iread = iread
         self._cache = cache
+        self._lock = lock
         self.channels, self.size = self._cache.shape
         self.block_size = 1
+
+        self._ioffset.value = -1
+        self._iwrite.value = 0
+        self._iread.value = 0
 
     def _get_read_index(self):
         return self._iread.value
@@ -40,6 +46,32 @@ class SharedRingBuffer(AbstractRingBuffer):
         samples = data.shape[-1]
         self._cache[..., offset:offset+samples] = data
         return samples
+
+    def should_set(self):
+        return self._ioffset.value >= 0
+
+    # Read and write should be locked to prevent concurrent access by the two
+    # proceses.  Even though one process is read-only and the other is
+    # write-only, I haven't had a chance to rigorously debug what happens if we
+    # don't lock access to the read/write.  The lock should be a re-entrant
+    # lock.  Since set() acquires a lock and then calls write(), this allows
+    # write() to acquire the same lock as well.  A simple, non-reentrant lock
+    # would prevent write() from acquiring lock().
+    def read(self, samples=None):
+        with self._lock:
+            return super(SharedRingBuffer, self).read(samples)
+
+    def write(self, data):
+        with self._lock:
+            return super(SharedRingBuffer, self).write(data)
+
+    # Locking is very important here because we need to ensure that both
+    # _ioffset and the data are written before the other process has access to
+    # it.
+    def set(self, data):
+        with self._lock:
+            self._ioffset.value = 0
+            self.write(data)
 
 class ReadableSharedRingBuffer(SharedRingBuffer):
 
