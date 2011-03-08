@@ -233,6 +233,12 @@ class SharedCircuit(object):
     anyway.
     '''
 
+    # List of methods whose attributes can be sent directly to the DSP process
+    # (pretty much all of them at the moment).  Note that set_coefficients may
+    # not work for large coefficient tables, but we'll find out (the hard way)!
+    PIPELINE_METHODS = ['stop', 'get_tag', 'set_tag', 'cget_tag', 'cset_tag',
+                        'trigger', 'set_coefficients']
+
     def __init__(self, process, circuit_name, device_name):
         self.process = process
         self.device_name = device_name
@@ -246,6 +252,5 @@ class SharedCircuit(object):
         This is just wraps up the method call into an object that can be sent
         via the queue to the other process.
         '''
-        if name in ['stop', 'get_tag', 'set_tag', 'cget_tag', 'cset_tag',
-                    'trigger']:
+        if name in self.PIPELINE_METHODS: 
             return partial(self.process._get_response, self.device_name, name)
