@@ -9,7 +9,7 @@ from constants import RCX_COEFFICIENT
 
 import logging
 log = logging.getLogger(__name__)
-log.setLevel(logging.WARN)
+log.setLevel(logging.DEBUG)
 
 class DSPCircuit(object):
 
@@ -201,6 +201,9 @@ class DSPCircuit(object):
             return WriteableDSPBuffer(self, data_tag, *args, **kw)
         elif mode == 'r':
             return ReadableDSPBuffer(self, data_tag, *args, **kw)
+
+    def clear_buffer(self, name):
+        self._iface.ZeroTag(name)
 
     def __str__(self):
         return "{0}:{1}".format(self.device_name, self.circuit_name)

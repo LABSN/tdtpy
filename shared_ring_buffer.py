@@ -10,12 +10,13 @@ class SharedRingBuffer(AbstractRingBuffer):
     Cache *must* be a view into a Numpy array.  use shmem_to_ndarray and reshape
     '''
 
-    def __init__(self, cache, iwrite, iread, ioffset, lock):
+    def __init__(self, cache, iwrite, iread, ioffset, lock, circuit):
         self._ioffset = ioffset
         self._iwrite = iwrite
         self._iread = iread
         self._cache = cache
         self._lock = lock
+        self._circuit = circuit
         self.channels, self.size = self._cache.shape
         self.block_size = 1
 
@@ -72,6 +73,10 @@ class SharedRingBuffer(AbstractRingBuffer):
         with self._lock:
             self._ioffset.value = 0
             self.write(data)
+
+    def clear(self):
+        with self._lock:
+            self._circuit.clear_buffer(self.data_tag)
 
 class ReadableSharedRingBuffer(SharedRingBuffer):
 
