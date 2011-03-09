@@ -17,6 +17,8 @@ def monitor(circuit_info, poll_period, pipe):
     '''
     Monitor loop that will be run in the subprocess.  
     '''
+    global RUN
+    RUN = True
 
     ##############################################################################
     # Internal (private) function definitions
@@ -26,14 +28,23 @@ def monitor(circuit_info, poll_period, pipe):
         # period is over.
         if pipe.poll(timeout):
             id, device, request, args = pipe.recv()
-            # Process the request
-            circuit = circuits[device]
-            response = getattr(circuit, request)(*args)
-            # Return the result of the request (along with the id)
-            pipe.send((id, response))
+
+            # TERMINATE is a special request to end the process and shutdown.
+            # We communicate this to the loop via a global variable, RUN.
+            if request == 'TERMINATE':
+                global RUN
+                RUN = False
+            else:
+                # Process the request
+                circuit = circuits[device]
+                response = getattr(circuit, request)(*args)
+                # Return the result of the request (along with the id)
+                pipe.send((id, response))
+                return False
 
     def read_buffer(hw_buffer, sw_buffer):
         if hw_buffer.pending():
+            print hw_buffer.pending()
             data = hw_buffer.read()
             sw_buffer.write(data)
 
@@ -78,7 +89,7 @@ def monitor(circuit_info, poll_period, pipe):
             # from the hardware buffer, then we need to write the data to the shared
             # memory via a WriteableSharedRingBuffer.  The other process will be
             # viewing the same memory space via a ReadableSharedRingBuffer.
-            args = cache, iwrite, iread, ioffset, lock
+            args = cache, iwrite, iread, ioffset, lock, circuit
             if mode == 'r':
                 sw_buffer = WriteableSharedRingBuffer(*args)
                 read_buffers.append((hw_buffer, sw_buffer))
@@ -95,7 +106,7 @@ def monitor(circuit_info, poll_period, pipe):
     ##############################################################################
     # Actual event loop
     ##############################################################################
-    while True:
+    while RUN:
         start = time.time()
         for hw_buffer, sw_buffer in read_buffers:
             # Since downloading buffer data can be a bit slow, let's check in
@@ -116,6 +127,16 @@ def monitor(circuit_info, poll_period, pipe):
             if elapsed >= poll_period:
                 break
             process_request(pipe, circuits, poll_period-elapsed)
+
+    # When a terminate request has been recieved via the piplein, RUN is set to
+    # False and we loop through all the circuits, stopping each one.
+    for circuit in circuits.values():
+        circuit.stop()
+
+    # Notify the parent process that we have successfully terminated
+    pipe.send((None, 'OK'))
+
+    # Finally, the process exits.
 
 class DSPProcess(mp.Process):
 
@@ -181,7 +202,7 @@ class DSPProcess(mp.Process):
         # Initialize the shared memory space for storing data acquired from the
         # DSP hardware
         cache = shmem_as_ndarray(shmem).reshape((buffer.channels, -1))
-        args = cache, iwrite, iread, ioffset, lock
+        args = cache, iwrite, iread, ioffset, lock, circuit
         if mode == 'r':
             sh_buffer = ReadableSharedRingBuffer(*args)
         elif mode == 'w':
@@ -189,7 +210,7 @@ class DSPProcess(mp.Process):
 
         # Copy the attributes over from the actual buffer to the shared buffer
         # so we have access to the metadata we need
-        attrs = ['fs', 'channels']
+        attrs = ['fs', 'channels', 'data_tag']
         for k, v in buffer.attributes(attrs).items():
             setattr(sh_buffer, k, v)
         return sh_buffer
@@ -220,6 +241,10 @@ class DSPProcess(mp.Process):
         if id != id:
             raise IOException, "Wrong response returned"
         return response
+
+    def stop(self):
+        self._parent_pipe.send((None, None, 'TERMINATE', None))
+        id, response = self._parent_pipe.recv()
 
 def partial(f, device_name, action):
     def wrapper(*args):
