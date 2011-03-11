@@ -6,7 +6,6 @@ import itertools
 
 import logging
 log = logging.getLogger(__name__)
-log.setLevel(logging.WARN)
 
 from util import shmem_as_ndarray, NP_TO_CTYPES
 from dsp_circuit import DSPCircuit
@@ -28,6 +27,7 @@ def monitor(circuit_info, poll_period, pipe):
         # period is over.
         if pipe.poll(timeout):
             id, device, request, args = pipe.recv()
+            log.debug("Recieved request %s with args %r", request, args)
 
             # TERMINATE is a special request to end the process and shutdown.
             # We communicate this to the loop via a global variable, RUN.
@@ -44,7 +44,6 @@ def monitor(circuit_info, poll_period, pipe):
 
     def read_buffer(hw_buffer, sw_buffer):
         if hw_buffer.pending():
-            print hw_buffer.pending()
             data = hw_buffer.read()
             sw_buffer.write(data)
 
@@ -53,6 +52,8 @@ def monitor(circuit_info, poll_period, pipe):
             data = sw_buffer.read()
             hw_buffer.set(data)
             sw_buffer._ioffset.value = -1
+            log.debug("Request to set buffer %s with %d samples", hw_buffer,
+                    len(data))
         elif hw_buffer.available() and sw_buffer.pending():
             samples = hw_buffer.available()
             hw_buffer.write(data)
@@ -228,6 +229,8 @@ class DSPProcess(mp.Process):
             args = ()
         id = self._request_id.next()
         # Send the request to the process via a queue
+        log.debug('Requesting %s:%s with arguments %r', device_name, request,
+                args)
         self._parent_pipe.send((id, device_name, request, args))
         # Wait till the response is available.  If no response is recieved after
         # one second, raise an exception.
@@ -246,9 +249,9 @@ class DSPProcess(mp.Process):
         self._parent_pipe.send((None, None, 'TERMINATE', None))
         id, response = self._parent_pipe.recv()
 
-def partial(f, device_name, action):
+def partial(f, device_name, action, timeout):
     def wrapper(*args):
-        return f(device_name, action, args)
+        return f(device_name, action, args, timeout)
     return wrapper
 
 class SharedCircuit(object):
@@ -283,4 +286,4 @@ class SharedCircuit(object):
         via the queue to the other process.
         '''
         if name in self.PIPELINE_METHODS: 
-            return partial(self.process._get_response, self.device_name, name)
+            return partial(self.process._get_response, self.device_name, name, 5)
