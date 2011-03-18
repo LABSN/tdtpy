@@ -1,3 +1,13 @@
+'''
+:mod:`dsp_circuit` -- Wrapper for RPvds circuit objects
+=======================================================
+
+.. module:: tdt.dsp_circuit
+    :platform: Windows (requires proprietary ActiveX driver)
+.. moduleauthor:: Brad Buran <bburan@alum.mit.edu>
+
+'''
+
 import atexit
 import numpy as np
 
@@ -11,6 +21,13 @@ import logging
 log = logging.getLogger(__name__)
 
 class DSPCircuit(object):
+    '''
+    Wrapper around the TDT ActiveX object, RPCo.X.
+
+    Provides several stringent checks and convenience methods to minimize
+    programming errors and typos.
+
+    '''
 
     def __init__(self, circuit_name, device_name, load=True):
         self.device_name = device_name
@@ -112,16 +129,22 @@ class DSPCircuit(object):
 
     def cset_tag(self, name, value, val_unit, tag_unit):
         '''
-        Enhanced version of `set_tag` that converts the value before setting
+        Enhanced version of `set_tag` that converts the value
 
         Parameters
-        ----------
+        ==========
         name : str
-            Tag name
+            Name of the parameter tag to write the converted value to
+        value : int or float
+            Value to convert
         val_unit : str
-            Requested unit
+            Unit of value provided
         tag_unit : str
-            Unit of tag
+            Unit parameter tag requires
+
+        Value will be converted from val_unit to tag_unit based on the sampling
+        frequency of the device (if needed).  See :module:`convert` for more
+        information.
         '''
         value = convert(val_unit, tag_unit, value, self.fs)
         self.set_tag(name, value)
@@ -129,6 +152,15 @@ class DSPCircuit(object):
     def get_tag(self, name):
         '''
         Analogue of RPco.X.GetTagVal
+
+        Parameters
+        ==========
+        name : str
+            Name of the parameter tag to read the value from
+
+        Raises DSPError
+            If the tag does not exist or is not a scalar value (e.g.  you cannot
+            use this method with parameter tags linked to a buffer)
         '''
         # Check to see if tag exists
         if name not in self.tags:
@@ -142,6 +174,17 @@ class DSPCircuit(object):
     def set_tag(self, name, value):
         '''
         Analogue of RPco.X.SetTagVal
+
+        Parameters
+        ==========
+        name : str 
+            Name of the parameter tag to write the value to
+        value : int or float
+            Value to write
+
+        Raises DSPError
+            If the tag does not exist or is not a scalar value (e.g. you cannot
+            use this method with parameter tags linked to a buffer)
         '''
         # Check to see if tag exists
         if name not in self.tags:
@@ -153,20 +196,36 @@ class DSPCircuit(object):
             raise DSPError(self, mesg)
         log.info("Set %s:%s to %r", self, name, value)
 
-    def set_coefficients(self, name, value):
+    def set_coefficients(self, name, data):
+        '''
+        Load data to a coefficient or matrix input
+        
+        Parameters
+        ==========
+        name : str 
+            Name of the parameter tag to write the data to
+        data : array-like
+            Data to write to tag.  Must be 1D format (even for matrices).
+            See RPvds documentation for appropriate ordering of indices for
+            the component.
+
+        Raises DSPError
+            If the specified parameter tag is not linked to a coefficient input
+            or the length of the data is not equal to the size of the input on
+            the component.
+
+        Note that as of 3.10.2011, RPvds' CoefLoad component appears to be
+        broken (per conversation with TDT's tech support -- Mark Hanus and Chris
+        Walters).  As a workaround, connect a data tag directly to the >K or
+        >Coef input of the component.
+        '''
         tag_size, tag_type = self.tags[name]
         if tag_type != RCX_COEFFICIENT:
             raise DSPError(self, "Tag %s is not a coefficient buffer" % name)
-        if tag_size != len(value):
+        if tag_size != len(data):
             mesg = "Exactly %d values must be written to tag %s"
             raise DSPError(self, mesg % (tag_size, name))
-        # Per conversation with TDT's tech support (Mark Hanus and Chris
-        # Walters), RPvds' CoefLoad appears to be broken.  It's not clear
-        # whether there are plans to fix this in future releases.  They
-        # indicated we should connect a tag directly to the coefficient buffer
-        # and use WriteTagV.  Coefficients must be a 1D array (even for matrix
-        # multiplication operations.
-        self._iface.WriteTagV(name, 0, value)
+        self._iface.WriteTagV(name, 0, array)
 
     def start(self):
         '''
