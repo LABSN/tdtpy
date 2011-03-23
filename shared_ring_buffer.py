@@ -1,3 +1,7 @@
+import time
+import logging
+log = logging.getLogger(__name__)
+
 from abstract_ring_buffer import AbstractRingBuffer
 
 class SharedRingBuffer(AbstractRingBuffer):
@@ -69,10 +73,18 @@ class SharedRingBuffer(AbstractRingBuffer):
     # Locking is very important here because we need to ensure that both
     # _ioffset and the data are written before the other process has access to
     # it.
-    def set(self, data):
+    def set(self, data, timeout=None):
+        # Request the set
         with self._lock:
             self._ioffset.value = 0
             self.write(data)
+            log.debug("%s: set successfully requested", self)
+        # Now, wait till the subprocess acknowledges that it has recieved the
+        # data and has uploaded it to the hardware before returning.  When the
+        # data is recieved and uploaded, the process will set _ioffset to -1, so
+        # we can just monitor this value.
+        while self._ioffset.value != -1:
+            time.sleep(0.1)
 
     def clear(self):
         with self._lock:

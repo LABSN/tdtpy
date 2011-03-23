@@ -349,8 +349,6 @@ class ReadableDSPBuffer(DSPBuffer):
         # directly to the ReadTagVEX function.
         data = self._iface.ReadTagVEX(self.data_tag, offset, length,
                 self.vex_src_type, self.vex_dest_type, self.channels)
-        #log.debug("%s: recieved %d samples", self, len(data))
-        #log.debug("%s: recieved data of type %r", self, type(data[0]))
         return np.divide(data, self.sf).astype(self.dest_type)
 
 class WriteableDSPBuffer(DSPBuffer):
@@ -362,12 +360,7 @@ class WriteableDSPBuffer(DSPBuffer):
     read_index = property(_get_read_index)
 
     def _write(self, offset, data):
-        # comtypes module does not recognize numpy arrays, so we have to convert
-        # it to a Python array first (seems fast enough).  The 'd' flag is the
-        # Python array typecode for a float32 value (which is required by the
-        # COM wrapper).
         log.debug("%s: write %d samples at %d", self, len(data), offset)
-        data = array('d', data)
         return self._iface.WriteTagV(self.data_tag, offset, data)
 
     def set(self, data):

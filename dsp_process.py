@@ -55,7 +55,11 @@ def monitor(circuit_info, poll_period, pipe):
             log.debug("Request to set buffer %s with %d samples", hw_buffer,
                     len(data))
         elif hw_buffer.available() and sw_buffer.pending():
-            samples = hw_buffer.available()
+            log.debug("Writing data to buffer")
+            available = hw_buffer.available()
+            pending = sw_buffer.pending()
+            samples = min((available, pending))
+            data = sw_buffer.read(samples)
             hw_buffer.write(data)
 
     ##############################################################################
@@ -157,6 +161,16 @@ class DSPProcess(mp.Process):
         super(DSPProcess, self).__init__(target=monitor)
 
     def load_circuit(self, circuit_name, device_name):
+        '''
+        Loads circuit and prepares shared memory for interprocess communication
+
+        Parameters
+        ----------
+        circuit_name : str
+            Path to circuit to load
+        device_name : str
+            Name of TDT System3 device to load circuit to
+        '''
         self._circuit_info[(circuit_name, device_name)] = []
         # We need to store a reference to the circuit here so we can properly
         # initialize any buffers we need

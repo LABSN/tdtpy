@@ -49,7 +49,6 @@ def connect(name, ID=1):
     '''
     debug_string = '%s %d via %s interface' % (name, ID, INTERFACE)
     driver = getattr(actxobjects, DRIVERS[name])()
-    #driver = comtypes.client.CreateObject('RPCo.X')
     if not getattr(driver, 'Connect%s' % name)(INTERFACE, ID):
         raise DSPError(name, "Connection failed")
     log.info("Connected to %s", name)
