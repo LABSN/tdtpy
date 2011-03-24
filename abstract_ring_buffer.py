@@ -63,9 +63,6 @@ class AbstractRingBuffer(object):
         '''
         return self.size-self.pending()
 
-    def _get_empty_array(self, samples):
-        return np.empty((self.channels, samples))
-
     def read(self, samples=None):
         pending = self.pending()
         if samples is None:
