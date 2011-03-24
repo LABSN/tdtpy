@@ -1,6 +1,7 @@
 import time
 import logging
 log = logging.getLogger(__name__)
+import numpy as np
 
 from abstract_ring_buffer import AbstractRingBuffer
 
@@ -21,6 +22,7 @@ class SharedRingBuffer(AbstractRingBuffer):
         self._cache = cache
         self._condition = condition
         self._circuit = circuit
+        self._dtype = self._cache.dtype
         self.channels, self.size = self._cache.shape
         self.block_size = 1
 
@@ -28,6 +30,8 @@ class SharedRingBuffer(AbstractRingBuffer):
         self._iwrite.value = 0
         self._iread.value = 0
         self._processed = False
+    def _get_empty_array(self, samples):
+        return np.empty((self.channels, samples), dtype=self._dtype)
 
     def _get_read_index(self):
         return self._iread.value
