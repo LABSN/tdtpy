@@ -225,7 +225,7 @@ class DSPCircuit(object):
         if tag_size != len(data):
             mesg = "Exactly %d values must be written to tag %s"
             raise DSPError(self, mesg % (tag_size, name))
-        self._iface.WriteTagV(name, 0, array)
+        self._iface.WriteTagV(name, 0, data)
 
     def start(self):
         '''
