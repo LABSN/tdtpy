@@ -14,12 +14,12 @@ class SharedRingBuffer(AbstractRingBuffer):
     Cache *must* be a view into a Numpy array.  use shmem_to_ndarray and reshape
     '''
 
-    def __init__(self, cache, iwrite, iread, ioffset, lock, circuit):
+    def __init__(self, cache, iwrite, iread, ioffset, condition, circuit):
         self._ioffset = ioffset
         self._iwrite = iwrite
         self._iread = iread
         self._cache = cache
-        self._lock = lock
+        self._condition = condition
         self._circuit = circuit
         self.channels, self.size = self._cache.shape
         self.block_size = 1
@@ -27,6 +27,7 @@ class SharedRingBuffer(AbstractRingBuffer):
         self._ioffset.value = -1
         self._iwrite.value = 0
         self._iread.value = 0
+        self._processed = False
 
     def _get_read_index(self):
         return self._iread.value
@@ -63,32 +64,35 @@ class SharedRingBuffer(AbstractRingBuffer):
     # write() to acquire the same lock as well.  A simple, non-reentrant lock
     # would prevent write() from acquiring lock().
     def read(self, samples=None):
-        with self._lock:
+        with self._condition:
             return super(SharedRingBuffer, self).read(samples)
 
-    def write(self, data):
-        with self._lock:
-            return super(SharedRingBuffer, self).write(data)
+    def write(self, data, timeout=None):
+        with self._condition:
+            result = super(SharedRingBuffer, self).write(data)
+            # Now, wait till the subprocess acknowledges that it has recieved
+            # the data and has uploaded it to the hardware before returning.  By
+            # telling _condition to wait, it will release the lock, and then
+            # wait for the other process to issue a _condition.notify() signal.
+            # At this point, the lock returns to this thread.
+            self._condition.wait(timeout)
+        return result
 
-    # Locking is very important here because we need to ensure that both
-    # _ioffset and the data are written before the other process has access to
-    # it.
     def set(self, data, timeout=None):
-        # Request the set
-        with self._lock:
+        with self._condition:
+            # Locking is very important here because we need to ensure that both
+            # _ioffset and the data are written before the other process has
+            # access to it.
             self._ioffset.value = 0
-            self.write(data)
-            log.debug("%s: set successfully requested", self)
-        # Now, wait till the subprocess acknowledges that it has recieved the
-        # data and has uploaded it to the hardware before returning.  When the
-        # data is recieved and uploaded, the process will set _ioffset to -1, so
-        # we can just monitor this value.
-        while self._ioffset.value != -1:
-            time.sleep(0.1)
+            self.write(data, timeout=timeout)
 
     def clear(self):
-        with self._lock:
+        with self._condition:
             self._circuit.clear_buffer(self.data_tag)
+
+    def notify(self):
+        with self._condition:
+            self._condition.notify()
 
 class ReadableSharedRingBuffer(SharedRingBuffer):
 
