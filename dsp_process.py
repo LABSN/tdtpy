@@ -45,22 +45,27 @@ def monitor(circuit_info, poll_period, pipe):
     def read_buffer(hw_buffer, sw_buffer):
         if hw_buffer.pending():
             data = hw_buffer.read()
-            sw_buffer.write(data)
+            # Timeout should be set to 0 (otherwise we are defeating the point
+            # of using multiprocessing).
+            sw_buffer.write(data, timeout=0)
 
     def write_buffer(hw_buffer, sw_buffer):
         if sw_buffer.should_set():
             data = sw_buffer.read()
             hw_buffer.set(data)
             sw_buffer._ioffset.value = -1
-            log.debug("Request to set buffer %s with %d samples", hw_buffer,
-                    len(data))
+            log.debug("Request to set buffer %s with %d samples", 
+                    hw_buffer, len(data))
+            sw_buffer.notify()
         elif hw_buffer.available() and sw_buffer.pending():
             log.debug("Writing data to buffer")
             available = hw_buffer.available()
             pending = sw_buffer.pending()
             samples = min((available, pending))
             data = sw_buffer.read(samples)
-            hw_buffer.write(data)
+            hw_buffer.write(data[0])
+            if not sw_buffer.pending():
+                sw_buffer.notify()
 
     ##############################################################################
     # Initialization code
@@ -85,7 +90,7 @@ def monitor(circuit_info, poll_period, pipe):
             iwrite = info['iwrite']
             iread = info['iread']
             ioffset = info['ioffset']
-            lock = info['lock']
+            condition = info['condition']
 
             hw_buffer = circuit.get_buffer(buffer_name, mode, *args, **kwargs)
             cache = shmem_as_ndarray(shmem).reshape((hw_buffer.channels, -1))
@@ -94,7 +99,7 @@ def monitor(circuit_info, poll_period, pipe):
             # from the hardware buffer, then we need to write the data to the shared
             # memory via a WriteableSharedRingBuffer.  The other process will be
             # viewing the same memory space via a ReadableSharedRingBuffer.
-            args = cache, iwrite, iread, ioffset, lock, circuit
+            args = cache, iwrite, iread, ioffset, condition, circuit
             if mode == 'r':
                 sw_buffer = WriteableSharedRingBuffer(*args)
                 read_buffers.append((hw_buffer, sw_buffer))
@@ -105,8 +110,12 @@ def monitor(circuit_info, poll_period, pipe):
         # Ok, now that we've initialized all the buffers for this circuit, it's
         # safe to start it.  Very important!  If you are running code that
         # requires multiple devices, then you need to be sure that the circuits
-        # are designed to handle being started asynchronously.
+        # are designed to handle being started asynchronously (e.g. use the zBUS
+        # trigger).
         circuit.start()
+
+    # Notify the parent that the process has started
+    pipe.send((None, 'STARTED'))
 
     ##############################################################################
     # Actual event loop
@@ -203,21 +212,21 @@ class DSPProcess(mp.Process):
         ioffset = mp.Value(ctypes.c_int)
 
         # Reentrant lock
-        lock = mp.RLock()
+        condition = mp.Condition(mp.RLock())
 
         # Save the information we need for reinitializing the buffer once the
         # process launches
         info = dict(circuit_name=circuit.circuit_name,
                 device=circuit.device_name, buffer_name=buffer_name, mode=mode,
                 args=args, kwargs=kwargs, shmem=shmem, iwrite=iwrite,
-                iread=iread, ioffset=ioffset, lock=lock)
+                iread=iread, ioffset=ioffset, condition=condition)
         key = (circuit.circuit_name, circuit.device_name)
         self._circuit_info[key].append(info)
 
         # Initialize the shared memory space for storing data acquired from the
         # DSP hardware
         cache = shmem_as_ndarray(shmem).reshape((buffer.channels, -1))
-        args = cache, iwrite, iread, ioffset, lock, circuit
+        args = cache, iwrite, iread, ioffset, condition, circuit
         if mode == 'r':
             sh_buffer = ReadableSharedRingBuffer(*args)
         elif mode == 'w':
@@ -229,6 +238,18 @@ class DSPProcess(mp.Process):
         for k, v in buffer.attributes(attrs).items():
             setattr(sh_buffer, k, v)
         return sh_buffer
+
+    def start(self):
+        super(DSPProcess, self).start()
+        # Wait until we have recieved a message that the process has
+        # successfully launched.  If we do not recive a message after 10
+        # seconds or recieve the wrong response, raise an error.
+        if not self._parent_pipe.poll(10):
+            raise SystemError, "Unable to launch process"
+        else:
+            id, response = self._parent_pipe.recv()
+            if response != 'STARTED':
+                raise SystemError, "Unable to launch process"
 
     def run(self):
         monitor(self._circuit_info, self.poll_period, self._child_pipe)
