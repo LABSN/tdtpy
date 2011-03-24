@@ -15,7 +15,7 @@ from util import get_cof_path, connect_zbus, connect
 from dsp_buffer import ReadableDSPBuffer, WriteableDSPBuffer
 from convert import convert
 from dsp_error import DSPError
-from constants import RCX_COEFFICIENT
+from constants import RCX_COEFFICIENT, RCX_CAST
 
 import logging
 log = logging.getLogger(__name__)
@@ -163,13 +163,22 @@ class DSPCircuit(object):
             use this method with parameter tags linked to a buffer)
         '''
         # Check to see if tag exists
-        if name not in self.tags:
+        try:
+            tag_size, tag_type = self.tags[name]
+        except KeyError:
             raise DSPError(self, "Tag %s does not exist" % name)
-        if self.tags[name][0] != 1:
+        if tag_size != 1:
             raise DSPError(self, "Tag %s is not a scalar value" % name)
         value = self._iface.GetTagVal(name)
         log.debug("Get %s:%s is %r", self, name, value)
-        return value
+
+        # The ActiveX wrapper always returns a float, regardless of whether it's
+        # a bool, int or float.  Usually this is not an issue for most Python
+        # code, but let's be sure to cast the value to the correct type.
+        if tag_type in RCX_CAST:
+            return RCX_CAST[tag_type](value)
+        else:
+            return value
 
     def set_tag(self, name, value):
         '''

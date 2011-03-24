@@ -7,6 +7,12 @@ RCX_FLOAT       = 83
 RCX_COEFFICIENT = 80
 RCX_BOOL        = 76
 
+RCX_CAST = {
+        RCX_INTEGER : int,
+        RCX_FLOAT   : float,
+        RCX_BOOL    : bool,
+        }
+
 # Eventually I'd like to bind the device-specific variables as "constants" on
 # the correct DSPCircuit so people can leverage these in their programs rather
 # than having to look up the correct channel.  However, we need to compile a
