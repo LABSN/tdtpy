@@ -18,6 +18,7 @@ def monitor(circuit_info, poll_period, pipe):
     '''
     global RUN
     RUN = True
+    log.debug("STARTING")
 
     ##############################################################################
     # Internal (private) function definitions
@@ -121,6 +122,7 @@ def monitor(circuit_info, poll_period, pipe):
     # Actual event loop
     ##############################################################################
     while RUN:
+        log.debug("RUNNING")
         start = time.time()
         for hw_buffer, sw_buffer in read_buffers:
             # Since downloading buffer data can be a bit slow, let's check in
@@ -151,6 +153,28 @@ def monitor(circuit_info, poll_period, pipe):
     pipe.send((None, 'OK'))
 
     # Finally, the process exits.
+
+class DSPProject(object):
+
+    def __init__(self):
+        self._circuit_info = {}
+        self._circuits = {}
+
+    def load_circuit(self, circuit_name, device_name):
+        self._circuit_info[(circuit_name, device_name)] = []
+        # We need to store a reference to the circuit here so we can properly
+        # initialize any buffers we need
+        circuit = DSPCircuit(circuit_name, device_name)
+        self._circuits[device_name] = circuit
+        return circuit
+
+    def start(self):
+        for circuit in self._circuits.values():
+            circuit.start()
+
+    def stop(self):
+        for circuit in self._circuits.values():
+            circuit.stop()
 
 class DSPProcess(mp.Process):
 
