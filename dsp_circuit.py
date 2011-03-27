@@ -8,6 +8,7 @@
 
 '''
 
+from os.path import abspath
 import atexit
 import numpy as np
 
@@ -15,7 +16,7 @@ from util import get_cof_path, connect_zbus, connect
 from dsp_buffer import ReadableDSPBuffer, WriteableDSPBuffer
 from convert import convert
 from dsp_error import DSPError
-from constants import RCX_COEFFICIENT, RCX_CAST
+from constants import RCX_COEFFICIENT, RCX_CAST, RCX_STATUS_BITMASK
 
 import logging
 log = logging.getLogger(__name__)
@@ -31,7 +32,7 @@ class DSPCircuit(object):
 
     def __init__(self, circuit_name, device_name, load=True):
         self.device_name = device_name
-        self.circuit_name = circuit_name
+        self.circuit_name = abspath(circuit_name)
         # Hint for Matlab users: _iface is the same COM object a Matlab user
         # typically works with when they call actxserver('RPco.X').  It supports
         # the exact same methods as the Matlab version.
@@ -200,7 +201,7 @@ class DSPCircuit(object):
             raise DSPError(self, "Tag %s does not exist" % name)
         if self.tags[name][0] != 1:
             raise DSPError(self, "Tag %s is not a scalar value" % name)
-        if not self._iface.SetTagVal(name, value):
+        if not self._iface.SetTagVal(name, float(value)):
             mesg = "Unable to set tag %s to %r" % (name, value)
             raise DSPError(self, mesg)
         log.info("Set %s:%s to %r", self, name, value)
@@ -234,33 +235,40 @@ class DSPCircuit(object):
         if tag_size != len(data):
             mesg = "Exactly %d values must be written to tag %s"
             raise DSPError(self, mesg % (tag_size, name))
-        self._iface.WriteTagV(name, 0, data)
+        if not self._iface.WriteTagV(name, 0, data):
+            raise DSPError(self, "Unable to upload data to buffer %s", name)
 
     def start(self):
         '''
         Analogue of RPco.X.Run
         '''
         log.debug("starting %s", self)
-        self._iface.Run()
+        if not self._iface.Run():
+            raise DSPError(self, "Unable to start circuit")
 
     def stop(self):
         '''
         Analogue of RPco.X.Halt
         '''
         log.debug("stopping %s", self)
-        self._iface.Halt()
+        if not self._iface.Halt():
+            raise DSPError(self, "Unable to stop circuit")
 
     def trigger(self, trigger, mode='pulse'):
         # Convert mode string to the corresponding integer
         mode_enum = dict(pulse=0, high=1, low=2)
+        # We have no way of ensuring that zBUS trigger A or B were fired
+        # properly due to a bug in versions of the ActiveX library >= 57.
         if trigger == 'A':
             self._zbus.zBusTrigA(0, mode_enum[mode], 10)
         elif trigger == 'B':
             self._zbus.zBusTrigB(0, mode_enum[mode], 10)
         elif (1 <= trigger < 10) and mode == 'pulse':
-            self._iface.SoftTrg(trigger)
+            if not self._iface.SoftTrg(trigger):
+                raise DSPError(self, "Could not fire soft trigger %d", trigger)
         else:
-            raise ValueError, "Unsupported trigger mode %s %s" % (trigger, mode)
+            mesg = "Unsupported trigger mode %s %s" % (trigger, mode)
+            raise DSPError(self, mesg)
         log.info('Trigger %r %s', trigger, mode)
 
     def get_buffer(self, data_tag, mode, *args, **kw):
@@ -270,7 +278,26 @@ class DSPCircuit(object):
             return ReadableDSPBuffer(self, data_tag, *args, **kw)
 
     def clear_buffer(self, name):
-        self._iface.ZeroTag(name)
+        if not self._iface.ZeroTag(name):
+            raise DSPError(self, "Unable to zero tag %s" % name)
+
+    def get_status(self, status):
+        return (self._iface.GetStatus() >> RCX_STATUS_BITMASK[status]) & 1
+
+    def is_connected(self):
+        '''
+        True if connection with hardware is active, False otherwise
+        '''
+        return self.get_status('connected')
+
+    def is_loaded(self):
+        '''
+        True if microcode is loaded, False otherwise
+        '''
+        return self.get_status('loaded')
+
+    def is_running(self):
+        return self.get_status('running')
 
     def __str__(self):
         return "{0}:{1}".format(self.device_name, self.circuit_name)
