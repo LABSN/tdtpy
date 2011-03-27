@@ -148,6 +148,7 @@ class DSPBuffer(AbstractRingBuffer):
 
         self.circuit = circuit
         self._iface = circuit._iface
+        self._zbus = circuit._zbus
         self.data_tag = data_tag
         self.size_tag = size_tag
         self.channels = channels
