@@ -327,7 +327,9 @@ class DSPBuffer(AbstractRingBuffer):
 
     def clear(self):
         '''Set buffer to zero'''
-        self._iface.ZeroTag(self.data_tag)
+        if not self._iface.ZeroTag(self.data_tag):
+            raise DSPError(self, "Unable to zero out buffer values")
+
 
 class ReadableDSPBuffer(DSPBuffer):
 
@@ -371,7 +373,8 @@ class WriteableDSPBuffer(DSPBuffer):
             mesg = "cannot write %d samples to buffer" % size
             raise DSPError(self, mesg)
         if self.size_tag is not None:
-            self._iface.SetTagVal(self.size_tag, size)
+            if not self._iface.SetTagVal(self.size_tag, size):
+                raise DSPError(self, "Unable to set buffer size to %d" % size)
             self._update_size()
         elif size != self.size:
             mesg = "buffer size cannot be configured"

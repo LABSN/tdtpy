@@ -23,3 +23,11 @@ RX6_DEFAULTS = {
         'ADC_CHANNEL_1':    128,
         'ADC_CHANNEL_2':    129,
         }
+
+# Value is the bit number containing the status for the corresponding value as
+# returned by RP.GetStatus()
+RCX_STATUS_BITMASK = {
+        'connected' :   0,
+        'loaded'    :   1,
+        'running'   :   2,
+        }
