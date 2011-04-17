@@ -8,7 +8,7 @@
 
 '''
 
-from os.path import abspath
+from os.path import abspath, split
 import atexit
 import numpy as np
 
@@ -300,4 +300,12 @@ class DSPCircuit(object):
         return self.get_status('running')
 
     def __str__(self):
-        return "{0}:{1}".format(self.device_name, self.circuit_name)
+        state = ''
+        if self.is_connected():
+            state += 'Cx'
+        if self.is_loaded():
+            state += 'Ld'
+        if self.is_running():
+            state += 'Rn'
+        
+        return "{}:{}:{}".format(self.device_name, split(self.circuit_name)[1], state)
