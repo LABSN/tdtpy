@@ -331,6 +331,59 @@ class DSPBuffer(AbstractRingBuffer):
         if not self._iface.ZeroTag(self.data_tag):
             raise DSPError(self, "Unable to zero out buffer values")
 
+    def acquire(self, trigger, handshake_tag, end_condition=None):
+        '''
+        Fire trigger and acquire resulting block of data
+
+        Parameters
+        ----------
+        trigger
+            Trigger that starts data acquistiion (can be A, B, or 1-9)
+        handshake_tag
+            Tag indicating status of data acquisition
+        end_condition
+            If None, any change to the value of handshake_tag after trigger is
+            fired indicates data acquisition is complete.  Otherwise, data
+            acquisition is done when the value of handshake_tag equals the
+            end_condition.  end_condition may be a Python callable that takes
+            the value of the handshake tag and returns a boolean indicating
+            whether acquisition is complete or not.
+
+        Data will be continuously spooled while the status of the handshake_tag
+        is being monitored, so a single acquisition block can be larger than the
+        size of the buffer.
+
+        Examples
+        --------
+        TODO
+        >>> buffer.acquire(1, 'sweep_done')
+        >>> buffer.acquire(1, 'sweep_done', True)
+
+        '''
+
+        # TODO: should we set the read index to = write index?
+
+        if end_condition is None:
+            handshake_value = self.circuit.get_tag(handshake_tag)
+            end_condition = lambda x: x != handshake_value
+        elif not callable(end_condition):
+            end_condition = lambda x: x == end_condition
+
+        acquired_data = []
+        self.circuit.trigger(trigger)
+        while not end_condition(self.circuit.get_tag(handshake_tag)):
+            acquired_data.append(self.read())
+        return np.concatenate(acquired_data)
+
+    def acquire_samples(self, trigger, samples):
+        acquired = 0
+        acquired_data = []
+        self.circuit.trigger(trigger)
+        while not acquired >= samples:
+            data = self.read()
+            acquired_data.append(data)
+            acquired += len(data)
+        return np.concatenate(acquired_data)[:samples]
 
 class ReadableDSPBuffer(DSPBuffer):
 
@@ -381,8 +434,6 @@ class WriteableDSPBuffer(DSPBuffer):
             mesg = "buffer size cannot be configured"
             raise DSPError(self, mesg)
 
-        #data = array('d', data)
-        #if not self._iface.WriteTagVEX(self.data_tag, 0, 'F32', data):
         if self.vex_src_type != 'F32':
             raise NotImplementedError
         if not self._iface.WriteTagV(self.data_tag, 0, data):
