@@ -54,8 +54,13 @@ class AbstractRingBuffer(object):
         '''
         Number of filled slots waiting to be read
         '''
-        samples = pending(self.read_index, self.write_index, self.size)
-        return int(samples/self.block_size)*self.block_size
+        return pending(self.read_index, self.write_index, self.size)
+
+    def blocks_pending(self):
+        '''
+        Number of filled slots waiting to be read
+        '''
+        return int(self.pending()/self.block_size)*self.block_size
 
     def available(self):
         '''
@@ -64,10 +69,9 @@ class AbstractRingBuffer(object):
         return self.size-self.pending()
 
     def read(self, samples=None):
-        pending = self.pending()
         if samples is None:
-            samples = pending
-        elif samples > pending:
+            samples = self.blocks_pending()
+        elif samples > self.pending():
             mesg = 'Attempt to read %d samples failed because only' + \
                    '%d slots are available for read'
             raise ValueError, mesg % (samples, pending)
