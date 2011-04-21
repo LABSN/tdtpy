@@ -1,6 +1,7 @@
 import logging
 log = logging.getLogger(__name__)
 
+import time
 import numpy as np
 from array import array
 
@@ -365,14 +366,18 @@ class DSPBuffer(AbstractRingBuffer):
 
         if end_condition is None:
             handshake_value = self.circuit.get_tag(handshake_tag)
-            end_condition = lambda x: x != handshake_value
+            done = lambda x: x != handshake_value
         elif not callable(end_condition):
-            end_condition = lambda x: x == end_condition
+            done = lambda x: x == end_condition
+        else:
+            done = end_condition
 
         acquired_data = []
         self.circuit.trigger(trigger)
-        while not end_condition(self.circuit.get_tag(handshake_tag)):
-            acquired_data.append(self.read())
+        while not done(self.circuit.get_tag(handshake_tag)):
+            acquired_data.append(self.read().ravel())
+            time.sleep(0.1)
+        acquired_data.append(self.read(self.pending()).ravel())
         return np.concatenate(acquired_data)
 
     def acquire_samples(self, trigger, samples):
@@ -381,7 +386,7 @@ class DSPBuffer(AbstractRingBuffer):
         self.circuit.trigger(trigger)
         while not acquired >= samples:
             data = self.read()
-            acquired_data.append(data)
+            acquired_data.append(data.ravel())
             acquired += len(data)
         return np.concatenate(acquired_data)[:samples]
 

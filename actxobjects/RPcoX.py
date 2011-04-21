@@ -237,7 +237,7 @@ class _DRPcoX(DispatchBaseClass):
             , nOS, Buf)
 
     def WriteTagVEX(self, Name=defaultNamedNotOptArg, nOS=defaultNamedNotOptArg, DstType=defaultNamedNotOptArg, Buf=defaultNamedNotOptArg):
-        return self._oleobj_.InvokeTypes(29, LCID, 1, (3, 0), ((8, 0), (3, 0), (8, 0), (12, 0)),Name
+        return self._oleobj_.InvokeTypes(29, LCID, 1, (3, 0), ((8, 0), (3, 0), (8, 0), (0x2005, 0)),Name
             , nOS, DstType, Buf)
 
     def ZeroTag(self, Name=defaultNamedNotOptArg):
