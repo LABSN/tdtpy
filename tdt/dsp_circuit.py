@@ -1,13 +1,3 @@
-'''
-:mod:`dsp_circuit` -- Wrapper for RPvds circuit objects
-=======================================================
-
-.. module:: tdt.dsp_circuit
-    :platform: Windows (requires proprietary ActiveX driver)
-.. moduleauthor:: Brad Buran <bburan@alum.mit.edu>
-
-'''
-
 from os.path import abspath, split
 import atexit
 import numpy as np
