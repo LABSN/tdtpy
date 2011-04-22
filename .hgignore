@@ -1,2 +1,4 @@
 glob:*.pyc
 glob:*.swp
+glob:docs/_*
+glob:build
