@@ -6,7 +6,10 @@ import ctypes
 # To use comptypes, zbus = comtypes.client.CreateObject('ZBUS.x')
 #import win32com.client
 # To use win32com, zbus = win32com.client.Dispatch('ZBUS.X')
-import actxobjects
+try:
+    import actxobjects
+except:
+    pass
 # To use actxobjects, zbus = actxobjects.ZBUSx()
 
 from dsp_error import DSPError
