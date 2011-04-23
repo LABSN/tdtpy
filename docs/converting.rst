@@ -1,18 +1,19 @@
 Converting your code from Matlab or Python to use TDTPy
 =======================================================
 
-Connecting to a device and loading a circuit:
+Connecting to a device and loading a circuit
+--------------------------------------------
 
-* Matlab::
+Matlab::
         
     iface = actxserver('RPco.X');
-    iface.ConnectRZ5('GB', 1);
+    iface.ConnectRZ6('GB', 1);
     iface.ClearCOF;
     iface.LoadCOF('record_microphone.rcx');
     iface.Run
     iface.Halt
 
-* Python::
+Python::
 
     from win32com.client import Dispatch
     iface = Dispatch('RPco.X')
@@ -22,16 +23,17 @@ Connecting to a device and loading a circuit:
     iface.Run()
     iface.Halt()
 
-* TDTPy::
+TDTPy::
 
     from tdt import DSPCircuit
     circuit = DSPCircuit('record_microphone', 'RZ6')
     circuit.start()
     circuit.stop()
 
-Getting/Setting a tag value:
+Getting/Setting a tag value
+---------------------------
 
-* Matlab::
+Matlab::
 
     iface.SetTagVal('nHi', 5);
     fs = iface.GetSFreq();
@@ -39,7 +41,7 @@ Getting/Setting a tag value:
     iface.SetTagVal('record_del_n', delay);
     duration = iface.GetTagVal('record_dur_n')/fs;
 
-* Python::
+Python::
 
     iface.SetTagVal('nHi', 5)
     fs = iface.GetSFreq()
@@ -47,40 +49,42 @@ Getting/Setting a tag value:
     iface.SetTagVal('record_del_n', delay)
     duration = iface.GetTagVal('record_dur_n')/fs
 
-* TDTPy::
+TDTPy::
 
     circuit.set_tag('nHi', 5)
     circuit.cset_tag('record_del_n', 25, 's', 'n')
     duration = circuit.cget_tag('record_dur_n', 's', 'n')
 
-Writing data to a buffer:
+Writing data to a buffer
+------------------------
 
-* Matlab::
+Matlab::
     
     iface.WriteTagV('speaker', 0, data);
 
-* Python::
+Python::
 
     iface.WriteTagV('speaker', 0, data)
 
-* TDTPy::
+TDTPy::
 
     speaker = iface.get_buffer('speaker', 'w')
     speaker.write(data)
 
-Reading data from a buffer:
+Reading data from a buffer
+--------------------------
 
-* Matlab::
+Matlab::
     
     size = iface.GetTagV('mic_i');
     data = iface.ReadTagV('speaker', 0, size);
 
-* Python::
+Python::
 
     size = iface.GetTagV('mic_i')
     data = iface.ReadTagV('speaker', 0, size)
 
-* TDTPy::
+TDTPy::
 
     mic = iface.get_buffer('mic', 'r')
     data = mic.read()
