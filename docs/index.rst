@@ -19,9 +19,10 @@ Contents:
 
 
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 2
 
-   dsp_buffer.rst
+    converting.rst
+    dsp_buffer.rst
 
 `tdt.DSPProject`
     A container for all circuits required for the experiment.
@@ -125,7 +126,7 @@ Roadmap
   leverage Enthought's powerful Traits_, TraitsGUI_ and Chaco_ packages for this
   purpose.
 * Support processing pipelines for uploaded and downloaded data.  This would be
-  especially useful when running TDTPy as a subprocess to offload much of hte
+  especially useful when running TDTPy as a subprocess to offload much of the
   processing overhead to a second CPU.
 * Support streaming data from RPvds buffers to disk so the main process does not
   have to handle this step as well (requires a IO library that is thread/process
@@ -373,7 +374,7 @@ equal to 10000.
 
     The acquire method continuously donwloads data while monitoring the end
     condition.  This allows you to acquire sets of data larger than the buffer
-    size without losing any data,
+    size without losing any data.
 
 Indices and tables
 ==================
