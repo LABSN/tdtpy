@@ -154,28 +154,6 @@ def monitor(circuit_info, poll_period, pipe):
 
     # Finally, the process exits.
 
-class DSPProject(object):
-
-    def __init__(self):
-        self._circuit_info = {}
-        self._circuits = {}
-
-    def load_circuit(self, circuit_name, device_name):
-        self._circuit_info[(circuit_name, device_name)] = []
-        # We need to store a reference to the circuit here so we can properly
-        # initialize any buffers we need
-        circuit = DSPCircuit(circuit_name, device_name)
-        self._circuits[device_name] = circuit
-        return circuit
-
-    def start(self):
-        for circuit in self._circuits.values():
-            circuit.start()
-
-    def stop(self):
-        for circuit in self._circuits.values():
-            circuit.stop()
-
 class DSPProcess(mp.Process):
 
     def __init__(self, poll_period=0.1, cache_duration=30):
