@@ -11,7 +11,7 @@ TDTPy Documentation
     We are still working on the documentation.  Much more to come in the next
     few weeks.
 
-.. module:: tdt.dsp_circuit
+.. module:: tdt
     :platform: Windows (requires proprietary ActiveX driver from TDT)
 .. moduleauthor:: Brad Buran <bburan@alum.mit.edu>
 
@@ -21,8 +21,9 @@ Contents:
 .. toctree::
     :maxdepth: 2
 
-    converting.rst
+    dsp_circuit.rst
     dsp_buffer.rst
+    converting.rst
 
 `tdt.DSPProject`
     A container for all circuits required for the experiment.

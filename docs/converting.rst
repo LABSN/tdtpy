@@ -7,28 +7,45 @@ Connecting to a device and loading a circuit
 Matlab::
         
     iface = actxserver('RPco.X');
-    iface.ConnectRZ6('GB', 1);
-    iface.ClearCOF;
-    iface.LoadCOF('record_microphone.rcx');
-    iface.Run
-    iface.Halt
+    if iface.ConnectRZ6('GB', 1) == 0 
+        disp 'connect error'; 
+    end
+    if iface.ClearCOF == 0 
+        disp 'clear error'; 
+    end
+    if iface.LoadCOF('record_microphone.rcx') == 0 
+        disp 'load error'; 
+    end
+    if iface.Run == 0 
+        disp 'run error'; 
+    end
 
 Python::
 
     from win32com.client import Dispatch
-    iface = Dispatch('RPco.X')
-    iface.ConnectRZ5('GB', 1)
-    iface.ClearCOF()
-    iface.LoadCOF('record_microphone.rcx')
-    iface.Run()
-    iface.Halt()
+    try:
+        pass
+        iface = Dispatch('RPco.X')
+        if not iface.ConnectRZ6('GB', 1):
+            raise SystemError, 'connect error'
+        if not iface.ClearCOF():
+            raise SystemError, 'clear error'
+        if not iface.LoadCOF('record_microphone.rcx'):
+            raise SystemError, 'load error'
+        if not iface.Run():
+            raise SystemError, 'run error'
+    except SystemError, e:
+        print "Error: {}".format(e)
 
 TDTPy::
 
     from tdt import DSPCircuit
-    circuit = DSPCircuit('record_microphone', 'RZ6')
-    circuit.start()
-    circuit.stop()
+    try:
+        circuit = DSPCircuit('record_microphone', 'RZ6')
+        circuit.start()
+        circuit.stop()
+    except DSPError, e:
+        print "Error: {}".format(e)
 
 Getting/Setting a tag value
 ---------------------------
@@ -53,7 +70,7 @@ TDTPy::
 
     circuit.set_tag('nHi', 5)
     circuit.cset_tag('record_del_n', 25, 's', 'n')
-    duration = circuit.cget_tag('record_dur_n', 's', 'n')
+    duration = circuit.cget_tag('record_dur_n', 'n', 's')
 
 Writing data to a buffer
 ------------------------
