@@ -8,6 +8,7 @@ import ctypes
 # To use win32com, zbus = win32com.client.Dispatch('ZBUS.X')
 try:
     import actxobjects
+    import pywintypes
 except:
     pass
 # To use actxobjects, zbus = actxobjects.ZBUSx()
@@ -32,19 +33,21 @@ def connect_zbus():
     '''
     Connect to the zBUS interface and set zBUS triggeres to low
     '''
-    zbus = actxobjects.ZBUSx()
-    #zbus = comtypes.client.CreateObject('ZBUS.x')
-    if not zbus.ConnectZBUS(INTERFACE):
-        raise DSPError("zBUS", "Connection failed")
-    log.info("Connected to zBUS")
+    try:
+        zbus = actxobjects.ZBUSx()
+        if not zbus.ConnectZBUS(INTERFACE):
+            raise DSPError("zBUS", "Connection failed")
+        log.info("Connected to zBUS")
 
-    # zBUS trigger is set to high for record mode, so ensure that both triggers
-    # are initialized to low.
-    zbus.zBusTrigA(0, 2, 10)
-    zbus.zBusTrigB(0, 2, 10)
-    log.info("Set zBusTrigA to low")
-    log.info("Set zBusTrigB to low")
-    return zbus
+        # zBUS trigger is set to high for record mode, so ensure that both
+        # triggers are initialized to low.
+        zbus.zBusTrigA(0, 2, 10)
+        zbus.zBusTrigB(0, 2, 10)
+        log.info("Set zBusTrigA to low")
+        log.info("Set zBusTrigB to low")
+        return zbus
+    except pywintypes.com_error:
+        raise ImportError, 'ActiveX drivers not installed'
 
 def connect(name, ID=1):
     '''
