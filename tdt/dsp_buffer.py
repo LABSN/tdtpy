@@ -219,8 +219,10 @@ class DSPBuffer(AbstractRingBuffer):
 
     def clear(self):
         '''Set buffer to zero'''
-        if not self._iface.ZeroTag(self.data_tag):
-            raise DSPError(self, "Unable to zero out buffer values")
+        #if not self._iface.ZeroTag(self.data_tag):
+        #    raise DSPError(self, "Unable to zero out buffer values")
+        zeros = np.zeros(self.n_samples)
+        self._iface.WriteTagV(self.data_tag, 0, zeros)
 
     def acquire(self, trigger, handshake_tag, end_condition=None):
         '''
