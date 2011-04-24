@@ -1,4 +1,16 @@
-glob:*.pyc
-glob:*.swp
-glob:docs/_*
-glob:build
+syntax: glob
+.installed.cfg
+bin
+develop-eggs
+parts
+
+*.egg-info
+
+tmp
+build
+dist
+
+*.pyc
+*.swp
+docs/_*
+*~
