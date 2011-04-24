@@ -72,7 +72,7 @@ class AbstractRingBuffer(object):
         if samples is None:
             samples = self.blocks_pending()
         elif samples > self.pending():
-            mesg = 'Attempt to read %d samples failed because only' + \
+            mesg = 'Attempt to read %d samples failed because only ' + \
                    '%d slots are available for read'
             raise ValueError, mesg % (samples, pending)
 
@@ -91,7 +91,7 @@ class AbstractRingBuffer(object):
         if samples == 0:
             return
         elif not force and (samples > available):
-            mesg = 'Attempt to write %d samples failed because only' + \
+            mesg = 'Attempt to write %d samples failed because only ' + \
                    '%d slots are available for write'
             raise ValueError, mesg % (samples, available)
 
