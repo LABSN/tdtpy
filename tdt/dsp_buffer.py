@@ -224,7 +224,8 @@ class DSPBuffer(AbstractRingBuffer):
         zeros = np.zeros(self.n_samples)
         self._iface.WriteTagV(self.data_tag, 0, zeros)
 
-    def acquire(self, trigger, handshake_tag, end_condition=None):
+    def acquire(self, trigger, handshake_tag, end_condition=None, trials=1,
+            intertrial_interval=0, poll_interval=0.1):
         '''
         Fire trigger and acquire resulting block of data
 
@@ -241,6 +242,10 @@ class DSPBuffer(AbstractRingBuffer):
             end_condition.  end_condition may be a Python callable that takes
             the value of the handshake tag and returns a boolean indicating
             whether acquisition is complete or not.
+        trials
+            Number of trials to collect
+        intertrial_interval
+            Time to pause in between trials
 
         Data will be continuously spooled while the status of the handshake_tag
         is being monitored, so a single acquisition block can be larger than the
@@ -265,12 +270,16 @@ class DSPBuffer(AbstractRingBuffer):
             done = end_condition
 
         acquired_data = []
-        self.circuit.trigger(trigger)
-        while not done(self.circuit.get_tag(handshake_tag)):
-            acquired_data.append(self.read().ravel())
-            time.sleep(0.1)
-        acquired_data.append(self.read(self.pending()).ravel())
-        return np.concatenate(acquired_data)
+        for i in range(trials):
+            time.sleep(intertrial_interval)
+            trial_data = []
+            self.circuit.trigger(trigger)
+            while not done(self.circuit.get_tag(handshake_tag)):
+                trial_data.append(self.read().ravel())
+                time.sleep(poll_interval)
+            trial_data.append(self.read(self.pending()).ravel())
+            acquired_data.append(np.concatenate(trial_data))
+        return np.vstack(acquired_data)
 
     def acquire_samples(self, trigger, samples):
         acquired = 0
