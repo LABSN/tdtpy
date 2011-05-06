@@ -1,7 +1,5 @@
 from distutils.core import setup
 
-description = '''Wrapper around TDT's ActiveX library'''
-
 setup(
     name='TDTPy',
     version='0.7',
@@ -11,4 +9,5 @@ setup(
     url='http://bradburan.com/programs-and-scripts',
     license='LICENSE.txt',
     description='Module for communicating with TDT\'s System 3 hardware',
+    requires=['win32com'],
 )
