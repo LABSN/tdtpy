@@ -1,4 +1,6 @@
 import numpy as np
+import logging
+log = logging.getLogger(__name__)
 
 def wrap(length, offset, buffer_size):
     if (offset+length) > buffer_size:
@@ -67,6 +69,9 @@ class AbstractRingBuffer(object):
         Number of empty slots available for writing
         '''
         return self.size-self.pending()
+
+    def read_all(self):
+        return self.read(self.pending())
 
     def read(self, samples=None):
         if samples is None:

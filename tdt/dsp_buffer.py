@@ -295,8 +295,9 @@ class ReadableDSPBuffer(DSPBuffer):
 
     def _get_write_index(self):
         index = self._iface.GetTagVal(self.idx_tag)
-        log.debug("%s: raw index is %d", self, index)
-        return index * self.compression / self.channels
+        actual_index = index * self.compression / self.channels
+        log.debug("%s: index raw %d, actual %d", self, index, actual_index)
+        return actual_index
 
     write_index = property(_get_write_index)
 
