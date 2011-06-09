@@ -299,3 +299,27 @@ class DSPCircuit(object):
             state += 'Rn'
         
         return "{}:{}:{}".format(self.device_name, split(self.circuit_name)[1], state)
+
+    def set_sort_windows(self, name, windows):    
+        '''
+        Utility function for configuring TDT's SpikeSort component coefficients
+        
+        Windows should be a list of 3-tuples in the format (time, center volt,
+        half-height)
+        
+        If the windows overlap in time such that they cannot be converted into
+        a coefficient buffer, and error will be raised. 
+        '''        
+        tag_size, tag_type = self.tags[name]
+        if tag_type != RCX_COEFFICIENT:
+            raise DSPError(self, "Tag %s is not a coefficient buffer" % name)            
+        coefficients = np.zeros(tag_size).reshape((-1, 3))
+        processed = []
+        for i, window in enumerate(windows):
+            t, center, height = window
+            x = round(t*self.fs)
+            if x in processed:
+                raise DSPError(self, "Windows for %s overlap in time" % name)
+            processed.append(x)
+            coefficients[x] = center, height, i+1            
+        self.set_coefficients(name, coefficients.ravel())
