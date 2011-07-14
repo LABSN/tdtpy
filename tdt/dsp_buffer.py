@@ -331,15 +331,18 @@ class WriteableDSPBuffer(DSPBuffer):
         data = np.asarray(data)
         size = data.shape[-1]
         if size > self.size_max:
-            mesg = "cannot write %d samples to buffer" % size
+            mesg = "Cannot write %d samples to buffer" % size
             raise DSPError(self, mesg)
         if self.size_tag is not None:
             if not self._iface.SetTagVal(self.size_tag, size):
                 raise DSPError(self, "Unable to set buffer size to %d" % size)
             self._update_size()
         elif size != self.size:
-            mesg = "buffer size cannot be configured"
+            mesg = "Buffer size cannot be configured"
             raise DSPError(self, mesg)
+
+        if size == 0:
+            return
 
         if self.vex_src_type != 'F32':
             raise NotImplementedError
