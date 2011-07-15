@@ -20,9 +20,10 @@ class DSPCircuit(object):
 
     '''
 
-    def __init__(self, circuit_name, device_name, load=True):
+    def __init__(self, circuit_name, device_name, device_id=1, load=True):
         self.device_name = device_name
         self.circuit_name = abspath(circuit_name)
+        self.device_id = id
         # Hint for Matlab users: _iface is the same COM object a Matlab user
         # typically works with when they call actxserver('RPco.X').  It supports
         # the exact same methods as the Matlab version.
