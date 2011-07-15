@@ -69,15 +69,15 @@ of high-level features that are not included in the ActiveX library:
 Furthermore, TDTPy was as written as part of an initial progress towards a
 hardware abstraction layer.  Your experiment code should not care whether you're
 using Tucker Davis' `System 3`_ hardware, `National Instruments DAQ platform`_,
-an audio card, or some combination of different vendors' hardware.  A key goal
-of TDTPy is to define an application programming interface (API) that can be
-implemented by Python wrappers around other hardware vendors' libraries.  By
-building experiment code on top of TDTPy (rather than directly on top of TDT's
-ActiveX library), switching to another hardware platform should only require the
-following steps:
+a high-quality audio card, or some combination of different vendors' hardware.
+A key goal of TDTPy is to begin progress towards an application programming
+interface (API) that can be implemented by Python wrappers around other hardware
+vendors' libraries.  By building experiment code on top of TDTPy (rather than
+directly on top of TDT's ActiveX library), switching to another hardware
+platform should only require the following steps:
 
 * Identifying (or writing) a wrapper around the vendor's library that supports
-  the API defined by TDTPy.
+  the public API that TDTPy also supports.
 * Writing the underlying microcode (e.g. a LabVIEW VI if you are switching
   to National Instruments' PXI) for the new hardware required to run the
   experiment.
@@ -377,10 +377,22 @@ equal to 10000.
     condition.  This allows you to acquire sets of data larger than the buffer
     size without losing any data.
 
+Accessing the raw ActiveX object
+--------------------------------
+Although DSPCircuit and DSPBuffer expose most of the functionality available via
+the ActiveX object, there may be times when you need to access it directly.  You
+may obtain a handle to the object via the function `tdt.util.connect`.
+
+>>> from tdt.util import connect
+>>> object = connect('RZ6', 'GB')
+
+Running I/O in a separate process
+---------------------------------
+TODO
+
 Indices and tables
 ==================
 
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
