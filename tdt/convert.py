@@ -1,5 +1,38 @@
 import re
 
+def ispow2(n):
+    '''
+    True if n is a power of 2, False otherwise
+
+    >>> ispow2(5)
+    False
+    >>> ispow2(4)
+    True
+    '''
+    return (n & (n-1)) == 0
+
+def nextpow2(n):
+    '''
+    Given n, return the nearest power of two that is >= n
+
+    >>> nextpow2(1)
+    1
+    >>> nextpow2(2)
+    2
+    >>> nextpow2(5)
+    8
+    >>> nextpow2(17)
+    32
+    '''
+    if ispow2(n):
+        return n
+    
+    count = 0
+    while n != 0:
+        n = n >> 1
+        count += 1
+    return 1 << count
+
 class SamplingRateError(ValueError):
     '''
     Indicates that the conversion of frequency to sampling rate could not be
@@ -49,6 +82,8 @@ def convert(src_unit, dest_unit, value, dsp_fs):
     5000
     >>> convert('fs', 'nPer', 500, 10000)
     20
+    >>> convert('s', 'nPow2', 5, 97.5e3)
+    524288
 
     Parameters
     ----------
@@ -89,3 +124,6 @@ def convert(src_unit, dest_unit, value, dsp_fs):
     fun = '%s_to_%s' % (src_unit, dest_unit)
     return locals()[fun](value, dsp_fs)
 
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()
