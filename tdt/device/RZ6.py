@@ -50,10 +50,12 @@ class TestWithHardware(unittest.TestCase):
 
     def setUp(self):
         from tdt import DSPCircuit
-        self.circuit = DSPCircuit(self.CIRCUIT, 'RZ6')
+        from os.path import dirname, join
+        circuit = join(dirname(__file__), self.CIRCUIT)
+        self.circuit = DSPCircuit(circuit, 'RZ6')
         self.buffer_in = self.circuit.get_buffer('in', 'w')
         self.buffer_out = self.circuit.get_buffer('out', 'r', src_type='int32',
-                dest_type='int32')
+                dest_type='int32', block_size=1)
         self.circuit.start()
 
     def test_waveform_to_bits(self):
