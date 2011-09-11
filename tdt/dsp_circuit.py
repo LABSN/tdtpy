@@ -1,6 +1,7 @@
 from os.path import abspath, split
 import atexit
 import numpy as np
+import time
 
 from util import get_cof_path, connect_zbus, connect
 from dsp_buffer import ReadableDSPBuffer, WriteableDSPBuffer
@@ -22,14 +23,15 @@ class DSPCircuit(object):
 
     def __init__(self, circuit_name, device_name, device_id=1, load=True):
         self.device_name = device_name
-        self.circuit_name = abspath(circuit_name)
+        self.circuit_name = split(circuit_name)[1]
+        #self.circuit_path = abspath(circuit_name)
         self.device_id = id
         # Hint for Matlab users: _iface is the same COM object a Matlab user
         # typically works with when they call actxserver('RPco.X').  It supports
         # the exact same methods as the Matlab version.
         self._iface = connect(device_name)
         self._zbus  = connect_zbus()
-        self._cof_path = get_cof_path(circuit_name)
+        self.circuit_path = get_cof_path(abspath(circuit_name))
         if load:
             self.load()
             import atexit
@@ -60,8 +62,8 @@ class DSPCircuit(object):
         self.read()
 
     def read(self):
-        if not self._iface.ReadCOF(self._cof_path):
-            mesg = "Unable to read %s" % self._cof_path
+        if not self._iface.ReadCOF(self.circuit_path):
+            mesg = "Unable to read %s" % self.circuit_path
             raise DSPError(self, mesg)
 
     def load(self):
@@ -76,10 +78,10 @@ class DSPCircuit(object):
         if not self._iface.ClearCOF():
             mesg = "Unable to clear %s buffers" % self
             raise DSPError(self, mesg)
-        if not self._iface.LoadCOF(self._cof_path):
-            mesg = 'Unable to load %s' % self._cof_path
+        if not self._iface.LoadCOF(self.circuit_path):
+            mesg = 'Unable to load %s' % self.circuit_path
             raise DSPError(self, mesg)
-        log.info("Reloaded %s", self)
+        log.debug("Reloaded %s", self)
         self.trigger('A', 'low')
         self.trigger('B', 'low')
 
@@ -99,7 +101,7 @@ class DSPCircuit(object):
                     raise DSPError(self, mesg)
                 tag_type = self._iface.GetTagType(name)
                 self.tags[name] = (tag_size, tag_type)
-                log.info("%s: found %s (size %d, type %s)", self, name,
+                log.debug("%s: found %s (size %d, type %s)", self, name,
                           tag_size, tag_type)
         self.fs = self._iface.GetSFreq()
 
@@ -195,7 +197,16 @@ class DSPCircuit(object):
         if not self._iface.SetTagVal(name, float(value)):
             mesg = "Unable to set tag %s to %r" % (name, value)
             raise DSPError(self, mesg)
-        log.info("Set %s:%s to %r", self, name, value)
+        log.debug("Set %s:%s to %r", self, name, value)
+
+    def set_tags(self, **tags):
+        '''
+        Convenience function for setting the value of multiple tags
+
+        >>> circuit.set_tags(record_duration=5, play_duration=4)
+        '''
+        for tag, value in tags.items():
+            self.set_tag(tag, value)
 
     def set_coefficients(self, name, data):
         '''
@@ -229,13 +240,17 @@ class DSPCircuit(object):
         if not self._iface.WriteTagV(name, 0, data):
             raise DSPError(self, "Unable to upload data to buffer %s", name)
 
-    def start(self):
+    def start(self, pause=0.25):
         '''
         Analogue of RPco.X.Run
+        
+        The circuit sometimes requires a couple hundred msec "settle" before we
+        can commence data acquisition
         '''
         log.debug("starting %s", self)
         if not self._iface.Run():
             raise DSPError(self, "Unable to start circuit")
+        time.sleep(pause)
 
     def stop(self):
         '''
@@ -246,6 +261,22 @@ class DSPCircuit(object):
             raise DSPError(self, "Unable to stop circuit")
 
     def trigger(self, trigger, mode='pulse'):
+        '''
+        Fire a zBUS or software trigger
+
+        Parameters
+        ==========
+        trigger : int or 'A' or 'B'
+            Fire the specified trigger.  If integer, this corresponds to
+            RPco.X.SoftTrg.  If 'A' or 'B', this fires the corresponding zBUS
+            trigger.
+        mode : 'pulse' or 'high' or 'low'
+            Relevant only when trigger is 'A' or 'B'.  Indicates the
+            corresponding mode to set the zBUS trigger to
+
+        Note that due to a bug in the TDT ActiveX library for versions greater
+        than 56, we have no way of ensuring that zBUS trigger A or B were fired.
+        '''
         # Convert mode string to the corresponding integer
         mode_enum = dict(pulse=0, high=1, low=2)
         # We have no way of ensuring that zBUS trigger A or B were fired
@@ -260,7 +291,7 @@ class DSPCircuit(object):
         else:
             mesg = "Unsupported trigger mode %s %s" % (trigger, mode)
             raise DSPError(self, mesg)
-        log.info('Trigger %r %s', trigger, mode)
+        log.debug('Trigger %r %s', trigger, mode)
 
     def get_buffer(self, data_tag, mode, *args, **kw):
         if mode == 'w':
@@ -298,8 +329,7 @@ class DSPCircuit(object):
             state += 'Ld'
         if self.is_running():
             state += 'Rn'
-        
-        return "{}:{}:{}".format(self.device_name, split(self.circuit_name)[1], state)
+        return "{}:{}:{}".format(self.device_name, self.circuit_name, state)
 
     def set_sort_windows(self, name, windows):    
         '''
@@ -324,3 +354,6 @@ class DSPCircuit(object):
             processed.append(x)
             coefficients[x] = center, height, i+1            
         self.set_coefficients(name, coefficients.ravel())
+
+    def convert(self, value, src_unit, dest_unit):
+        return convert(src_unit, dest_unit, value, self.fs)

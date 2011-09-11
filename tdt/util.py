@@ -2,22 +2,16 @@ import os
 import numpy as np
 import ctypes
 
-#import comtypes.client
-# To use comptypes, zbus = comtypes.client.CreateObject('ZBUS.x')
-#import win32com.client
-# To use win32com, zbus = win32com.client.Dispatch('ZBUS.X')
 try:
     import actxobjects
     import pywintypes
 except:
     pass
-# To use actxobjects, zbus = actxobjects.ZBUSx()
 
 from dsp_error import DSPError
 
 import logging
 log = logging.getLogger(__name__)
-log.setLevel(logging.WARN)
 
 INTERFACE = 'GB'
 
@@ -37,14 +31,14 @@ def connect_zbus():
         zbus = actxobjects.ZBUSx()
         if not zbus.ConnectZBUS(INTERFACE):
             raise DSPError("zBUS", "Connection failed")
-        log.info("Connected to zBUS")
+        log.debug("Connected to zBUS")
 
         # zBUS trigger is set to high for record mode, so ensure that both
         # triggers are initialized to low.
         zbus.zBusTrigA(0, 2, 10)
         zbus.zBusTrigB(0, 2, 10)
-        log.info("Set zBusTrigA to low")
-        log.info("Set zBusTrigB to low")
+        log.debug("Set zBusTrigA to low")
+        log.debug("Set zBusTrigB to low")
         return zbus
     except pywintypes.com_error:
         raise ImportError, 'ActiveX drivers not installed'
@@ -57,7 +51,7 @@ def connect(name, ID=1):
     driver = getattr(actxobjects, DRIVERS[name])()
     if not getattr(driver, 'Connect%s' % name)(INTERFACE, ID):
         raise DSPError(name, "Connection failed")
-    log.info("Connected to %s", name)
+    log.debug("Connected to %s", name)
     return driver
 
 def get_cof_path(circuit_name):
@@ -73,10 +67,10 @@ def get_cof_path(circuit_name):
     if not circuit_name.endswith('.rcx'):
         circuit_name += '.rcx'
 
-    log.info("Attempting to locate circuit %s", circuit_name)
+    log.debug("Attempting to locate circuit %s", circuit_name)
     for dir in search_dirs:
         circuit_path = os.path.join(dir, circuit_name)
-        log.info('Checking %s', circuit_path)
+        log.debug('Checking %s', circuit_path)
         if os.path.exists(circuit_path):
             success = True
             break
@@ -104,7 +98,7 @@ def dtype_to_type_str(data_type):
     # Likewise, dtype.char is 'i' for integer and 'f' for floating point
     # datatypes.
     type_str = "{0}{1}".format(type_code, data_type.itemsize*8)
-    log.info("%r TDT type string is %s", data_type, type_str)
+    log.debug("%r TDT type string is %s", data_type, type_str)
     if type_str not in ['F32', 'I32', 'I16', 'I8']:
         raise ValueError, "Unsupported dtype"
     return type_str
