@@ -1,6 +1,3 @@
-import logging
-log = logging.getLogger(__name__)
-
 import time
 import numpy as np
 from array import array
@@ -10,6 +7,9 @@ from dsp_error import DSPError
 
 from constants import RCX_BUFFER
 from abstract_ring_buffer import AbstractRingBuffer 
+
+import logging
+log = logging.getLogger(__name__)
 
 class DSPBuffer(AbstractRingBuffer):
     '''
@@ -138,7 +138,7 @@ class DSPBuffer(AbstractRingBuffer):
             raise DSPError(self, mesg)
 
         # Spit out debugging information
-        log.info('Initialized %s', self._get_debug_info())
+        log.debug('Initialized %s', self._get_debug_info())
 
     def _get_debug_info(self):
         attr_strings = ['{0}: {1}'.format(*a) for a in self.attributes().items()]
@@ -218,21 +218,61 @@ class DSPBuffer(AbstractRingBuffer):
                 self.write_index, self.size)
 
     def clear(self):
-        '''Set buffer to zero'''
-        #if not self._iface.ZeroTag(self.data_tag):
-        #    raise DSPError(self, "Unable to zero out buffer values")
+        '''
+        Set buffer to zero
+
+        Due to a bug in the TDT ActiveX library, RPco.X.ZeroTag does not work on
+        certain hardware configurations.  TDT (per conversation with Chris
+        Walters and Nafi Yasar) have indicated that they will not fix this bug.
+        They have also indicated that they may deprecate ZeroTag in future
+        versions of the ActiveX library.
+
+        As a workaround, this method zeros out the buffer by writing a stream of
+        zeros.
+        '''
         zeros = np.zeros(self.n_samples)
         self._iface.WriteTagV(self.data_tag, 0, zeros)
 
+    def _acquire(self, trigger, end_condition, samples=None, trials=1,
+            intertrial_interval=0, poll_interval=0.1, reset_read=True):
+        '''
+        Convenience function to handle core logic of acquisition.  Use
+        `DSPCircuit.acquire` or `DSPCircuit.acquire_samples` instead.
+        '''
+        acquired_data = []
+        for i in range(trials):
+            if reset_read:
+                self.reset_read(0)
+            samples_acquired = 0
+            time.sleep(intertrial_interval)
+            trial_data = []
+            self.circuit.trigger(trigger)
+            while True:
+                if end_condition(self, samples_acquired):
+                    break
+                new_data = self.read()
+                samples_acquired += new_data.shape[-1]
+                trial_data.append(new_data)
+                log.debug('%s: acquired %d samples', self, samples_acquired)
+                time.sleep(poll_interval)
+            remaining_data = self.read()
+            samples_acquired += remaining_data.shape[-1]
+            trial_data.append(remaining_data)
+            trial_data = np.hstack(trial_data)
+            if samples is not None:
+                trial_data = trial_data[:,:samples]
+            acquired_data.append(trial_data[np.newaxis])
+        return np.vstack(acquired_data)
+
     def acquire(self, trigger, handshake_tag, end_condition=None, trials=1,
-            intertrial_interval=0, poll_interval=0.1):
+            intertrial_interval=0, poll_interval=0.1, reset_read=True):
         '''
         Fire trigger and acquire resulting block of data
 
         Parameters
         ----------
         trigger
-            Trigger that starts data acquistiion (can be A, B, or 1-9)
+            Trigger that starts data acquistion (can be A, B, or 1-9)
         handshake_tag
             Tag indicating status of data acquisition
         end_condition
@@ -246,6 +286,18 @@ class DSPBuffer(AbstractRingBuffer):
             Number of trials to collect
         intertrial_interval
             Time to pause in between trials
+        poll_interval
+            Time to pause in between polling hardware
+        reset_read
+            Should the read index be reset at the beginning of each acquisition
+            sweep?  If data is written starting at the first index of the
+            buffer, then this should be True.  If data is written continuously
+            to the buffer with no reset of the index in between sweeps, then
+            this should be False.
+
+        Returns
+        -------
+        3D array with dimensions corresponding to trial, channel and sample
 
         Data will be continuously spooled while the status of the handshake_tag
         is being monitored, so a single acquisition block can be larger than the
@@ -253,43 +305,39 @@ class DSPBuffer(AbstractRingBuffer):
 
         Examples
         --------
-        TODO
+        TODO: flesh this out a bit more
         >>> buffer.acquire(1, 'sweep_done')
         >>> buffer.acquire(1, 'sweep_done', True)
 
         '''
-
         # TODO: should we set the read index to = write index?
 
         if end_condition is None:
             handshake_value = self.circuit.get_tag(handshake_tag)
-            done = lambda x: x != handshake_value
+            is_done = lambda x: x != handshake_value
         elif not callable(end_condition):
-            done = lambda x: x == end_condition
+            is_done = lambda x: x == end_condition
         else:
-            done = end_condition
+            is_done = end_condition
 
-        acquired_data = []
-        for i in range(trials):
-            time.sleep(intertrial_interval)
-            trial_data = []
-            self.circuit.trigger(trigger)
-            while not done(self.circuit.get_tag(handshake_tag)):
-                trial_data.append(self.read().ravel())
-                time.sleep(poll_interval)
-            trial_data.append(self.read(self.pending()).ravel())
-            acquired_data.append(np.concatenate(trial_data))
-        return np.vstack(acquired_data)
+        def wrapper(dsp_buffer, samples):
+            current_value = dsp_buffer.circuit.get_tag(handshake_tag)
+            return is_done(current_value)
 
-    def acquire_samples(self, trigger, samples):
-        acquired = 0
-        acquired_data = []
-        self.circuit.trigger(trigger)
-        while not acquired >= samples:
-            data = self.read()
-            acquired_data.append(data.ravel())
-            acquired += len(data)
-        return np.concatenate(acquired_data)[:samples]
+        return self._acquire(trigger, end_condition=is_done, samples=None,
+                trials=trials, intertrial_interval=intertrial_interval,
+                poll_interval=poll_interval, reset_read=reset_read)
+
+    def acquire_samples(self, trigger, samples, trials=1, intertrial_interval=0,
+            poll_interval=0.1, reset_read=True):
+        '''
+        Fire trigger and acquire n samples
+        '''
+        log.debug('%s: attempting to acquire %d samples', self, samples)
+        is_done = lambda b, s: s >= samples
+        return self._acquire(trigger, end_condition=is_done, samples=samples,
+                trials=trials, intertrial_interval=intertrial_interval,
+                poll_interval=poll_interval, reset_read=reset_read)
 
 class ReadableDSPBuffer(DSPBuffer):
 
