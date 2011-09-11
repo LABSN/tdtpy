@@ -31,6 +31,48 @@ If a required tag cannot be found (either by explicitly defining the tag name or
 automatically by adding the default extension to the data tag name), an error is
 raised.
 
+.. image:: example_buffer.*
+
+In the above code, there is a singlue buffer named `contact` with three
+supporting tags (`contact_d`, `contact_sf` and `contact_i`) that assist the
+:mod:`tdt.DSPBuffer` class in reading data stored in `contact`.  For example, we
+know that, due to the fact that we are applying a scaling factor of 127 to the
+floating-point data stored in the contact buffer, we are only saving the data
+with a resolution of 0.00787::
+
+    >>> contact_buffer = circuit.get_buffer('contact', 'r', src_type='int8')
+    >>> print contact_buffer.resolution
+    0.00787
+
+Because we specified that the data is stored in 8-bit format, four samples are
+being compressed into a single 32-bit slot::
+
+    >>> print contact_buffer.compression
+    4
+
+Since `contact_d` is set to 80 (i.e. acquire and save a sample every 80 cycles),
+we know the sampling frequency of the contact data is only 1/80th of the
+sampling rate of the DSP::
+
+    >>> print circuit.fs
+    97656.25
+    >>> print contact_buffer.fs
+    1220.703125
+
+.. note::
+
+    This buffer uses the enable and reset hops to control data acquisition,
+    consistent with the coding guidelines described in dsp_buffer.rst.
+
+.. note::
+
+    Currently TDTPy does not support changing sampling rate on-the-fly (you can
+    do it, but you need to reload the buffer).
+
+Reading single and multichannel data
+------------------------------------
+TODO
+
 Tags
 ----
 data_tag : string (required)
