@@ -353,23 +353,23 @@ The `DSPBuffer.acquire` method takes three arguments:
 * The tag on the DSP to monitor.  
 * The value of the monitor tag that indicates data acquisition is done.
 
-Fire trigger 1 and continuously acquire data until ``running`` tag is False:
+Fire trigger 1 and continuously acquire data until ``running`` tag is False::
 
->>> microphone_buffer.acquire(1, 'recording', False)
+    microphone_buffer.acquire(1, 'recording', False)
 
-Fire trigger 1 and continuously acquire data until ``complete`` tag is True:
+Fire trigger 1 and continuously acquire data until ``complete`` tag is True::
 
->>> microphone_buffer.acquire(1, 'complete', True)
+    microphone_buffer.acquire(1, 'complete', True)
 
 Get the initial value of ``toggle``, fire trigger 1, then continuously acquire
-data until the value of ``toggle`` changes:
+data until the value of ``toggle`` changes::
 
->>> microphone_buffer.acquire(1, 'toggle', True)
+    microphone_buffer.acquire(1, 'toggle', True)
 
 Fire trigger 1 and continuously acquire data until ``index`` tag is greater or
-equal to 10000.
+equal to 10000::
 
->>> microphone_buffer.acquire(1, 'index', lambda x: x >= 1000)
+    microphone_buffer.acquire(1, 'index', lambda x: x >= 1000)
 
 .. note::
 
@@ -381,10 +381,10 @@ Accessing the raw ActiveX object
 --------------------------------
 Although DSPCircuit and DSPBuffer expose most of the functionality available via
 the ActiveX object, there may be times when you need to access it directly.  You
-may obtain a handle to the object via the function `tdt.util.connect`.
+may obtain a handle to the object via the function `tdt.util.connect`::
 
->>> from tdt.util import connect
->>> object = connect('RZ6', 'GB')
+    from tdt.util import connect
+    obj = connect('RZ6', 'GB')
 
 Running I/O in a separate process
 ---------------------------------

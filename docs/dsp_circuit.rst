@@ -51,3 +51,54 @@ Attempting to get/set the value of a nonexistent tag in the circuit will raise a
 
 >>> circuit.get_tag('nonexistent_tag')
 DSPError: 'nonexistent_tag' not found in circuit
+
+Suggested code conventions
+--------------------------
+
+Sharing code across circuits
+............................
+The current version of TDT's real-time processor visual design studio (RPvds)
+does not facilitate code reuse.  The macro system is undocumented and clearly
+not meant for general use.  For example, a macro embedded into a circut has the
+*absolute* path to the macro hard-coded.  This makes it extremely difficult to
+place circuits using macros under revision control and maintain multiple
+branches on the same computer.  The copy of the circuit in each branch will
+insist on loading the macro stored in the directory of the original branch where
+the commit was made, not the location of the macro in the new branch.
+Furthermore, if you decide to move your code to a new folder, you must manually
+update the reference to the macros in each circuit you use (even if the relative
+path between the macro and circuit remains unchanged).
+
+Instead, create a page in your circuit file that contains *only* the shared code
+that you would like each circuit to use.  Whenever you update the code on this
+page, it's easy to cut and paste the modified code to the other circuits that
+also use it.  Just be sure to keep the same naming conventions for whatever tags
+and hops you use in the common portion of the code.
+
+Tag naming
+..........
+Use right-pointing tags to indicate that they are meant to be written and
+left-pointing tags to indicate they are meant to be read.  Although a tag can be
+used for both purposes, it makes it much easier for a new programmer to
+ascertain the purpose of the tag.  Is it meant to be a setting that can be
+modified via the software, or does it hold data that is meant for the software?
+
+If the output of the tag reflects an epoch boundary, use the '/' suffix to
+indicate the start and '\' to indicate the end.  If it is simply a point in time
+(i.e. a timestamp), use the '|' suffix.
+
+Hop naming
+..........
+Use the '_start' and '_end' suffix to indicate the hop reflects a logical value
+that is true for only one cycle of the sample clock (i.e. the output of an
+EdgeDetect component).  Use the '_TTL' or '_window' suffix to indicate that the
+hop reflects a logical value that is true for some duration of time.
+
+zBUS trigger A
+..............
+In many cases it's a good idea to put most of the circuit under control of zBUS
+trigger A using the following circuit construct.  
+
+.. image:: zBUS_trigger.*
+
+TODO: finish this section
