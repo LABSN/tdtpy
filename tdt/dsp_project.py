@@ -2,6 +2,9 @@ from util import connect_zbus
 from dsp_circuit import DSPCircuit
 import atexit
 
+import logging
+log = logging.getLogger(__name__)
+
 class DSPProject(object):
 
     def __init__(self):
@@ -38,5 +41,4 @@ class DSPProject(object):
         else:
             mesg = "Unsupported trigger mode %s %s" % (trigger, mode)
             raise DSPError(self, mesg)
-        log.info('Trigger %r %s', trigger, mode)
-
+        log.debug('Trigger %r %s', trigger, mode)

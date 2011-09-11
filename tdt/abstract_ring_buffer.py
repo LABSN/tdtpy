@@ -77,9 +77,9 @@ class AbstractRingBuffer(object):
         if samples is None:
             samples = self.blocks_pending()
         elif samples > self.pending():
-            mesg = 'Attempt to read %d samples failed because only ' + \
-                   '%d slots are available for read'
-            raise ValueError, mesg % (samples, pending)
+            mesg = 'Attempt to read %r samples failed because only ' + \
+                   '%r slots are available for read'
+            raise ValueError, mesg % (samples, self.pending())
 
         data = self._get_empty_array(samples)
         samples_read = 0
@@ -108,3 +108,11 @@ class AbstractRingBuffer(object):
         self.write_index = (o+l) % self.size 
         self.total_samples_written += samples_written
         return samples_written
+
+    def reset_read(self, index=None):
+        '''
+        Reset the read index
+        '''
+        if index is None:
+            index = self._iface.GetTagVal(self.idx_tag)
+        self.read_index = index
