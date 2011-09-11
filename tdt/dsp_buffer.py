@@ -324,7 +324,7 @@ class DSPBuffer(AbstractRingBuffer):
             current_value = dsp_buffer.circuit.get_tag(handshake_tag)
             return is_done(current_value)
 
-        return self._acquire(trigger, end_condition=is_done, samples=None,
+        return self._acquire(trigger, end_condition=wrapper, samples=None,
                 trials=trials, intertrial_interval=intertrial_interval,
                 poll_interval=poll_interval, reset_read=reset_read)
 
