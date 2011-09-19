@@ -70,6 +70,9 @@ class AbstractRingBuffer(object):
         '''
         return self.size-self.pending()
 
+    def blocks_available(self):
+        return int(self.available()/self.block_size)*self.block_size
+
     def read_all(self):
         return self.read(self.pending())
 
