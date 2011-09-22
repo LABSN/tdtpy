@@ -357,3 +357,14 @@ class DSPCircuit(object):
 
     def convert(self, value, src_unit, dest_unit):
         return convert(src_unit, dest_unit, value, self.fs)
+
+    def print_tag_info(self):
+        '''
+        Prints a list of tags and their current value if they are a scalar
+        (buffer tags are not printed yet)
+
+        Used as a convenience method for debugging
+        '''
+        for tag, (tag_size, tag_type) in self.tags.items():
+            if tag_size == 1:
+                print tag, self.get_tag(tag)
