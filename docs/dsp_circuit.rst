@@ -102,3 +102,10 @@ trigger A using the following circuit construct.
 .. image:: zBUS_trigger.*
 
 TODO: finish this section
+
+The DSPCircuit class
+--------------------
+
+.. autoclass:: tdt.DSPCircuit
+    :members:
+    :inherited-members:
