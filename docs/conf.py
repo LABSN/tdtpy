@@ -13,6 +13,16 @@
 
 import sys, os
 
+# Mock out the modules so that sphinx autodoc can run without requiring these
+# platform dependencies
+class Mock(object):
+    def __init__(self, *args):
+        pass
+    def __getattr__(self, name):
+        return Mock
+for mod_name in ('numpy', 'win32com'):
+    sys.modules[mod_name] = Mock()
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
