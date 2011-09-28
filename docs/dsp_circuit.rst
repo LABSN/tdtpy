@@ -1,4 +1,4 @@
-:mod:`tdt.dsp_circuit` -- Wrapper for RPvds circuit objects
+:class:`tdt.DSPCircuit` -- Wrapper for RPvds circuit objects
 ===========================================================
 
 Wrapper around a RPvds circuit.
@@ -102,10 +102,3 @@ trigger A using the following circuit construct.
 .. image:: zBUS_trigger.*
 
 TODO: finish this section
-
-The DSPCircuit class
---------------------
-
-.. autoclass:: tdt.DSPCircuit
-    :members:
-    :inherited-members:
