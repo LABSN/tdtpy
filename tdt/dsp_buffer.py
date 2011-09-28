@@ -27,7 +27,7 @@ class DSPBuffer(AbstractRingBuffer):
             'block_size']
 
     def __init__(self, circuit, data_tag, idx_tag=None, size_tag=None,
-                 sf_tag=None, cycle_tag=None, dec_tag=None, block_size=4096,
+                 sf_tag=None, cycle_tag=None, dec_tag=None, block_size=1,
                  src_type='float32', dest_type='float32', channels=1):
 
         if data_tag not in circuit.tags:
