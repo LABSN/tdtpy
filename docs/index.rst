@@ -24,18 +24,7 @@ Contents:
     dsp_circuit.rst
     dsp_buffer.rst
     converting.rst
-
-`tdt.DSPProject`
-    A container for all circuits required for the experiment.
-
-`tdt.DSPCircuit` 
-    A wrapper around a single RPvds circuit.  Note that a single circuit maps to a
-    single device (i.e. you can only have one circuit running on a single DSP at
-    a time).
-
-`tdt.DSPBuffer`
-    A wrapper around a single DSP buffer object.
-
+    api.rst
 
 Why use TDTPy?
 ==============
