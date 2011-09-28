@@ -1,4 +1,4 @@
-:mod:`tdt.dsp_buffer` -- Wrapper for RPvds buffer objects
+:class:`tdt.DSPBuffer` -- Wrapper for RPvds buffer objects
 =========================================================
 
 Each buffer requires tags linked to the data and index parameters of the buffer
