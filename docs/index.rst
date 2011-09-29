@@ -102,7 +102,7 @@ setting up and running experiments by providing high-level functionality.
   saving the data (i.e. you can dump it to a HDF5, XML, ASCII, CSV or MAT
   container).
 * Integrating OpenEx with your custom scripts is somewhat of a hack.  You must
-  launch OpenEx then launch your script.  TDTPy is part of your cript.
+  launch OpenEx then launch your script.  TDTPy is part of your script.
 * TDTPy comes with robust error-checking that catches many common coding
   mistakes (e.g. attempting to access a non-existent tag on the device) and a
   test-suite you can use to ensure your hardware is performing to spec.
