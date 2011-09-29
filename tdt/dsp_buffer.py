@@ -206,6 +206,7 @@ class DSPBuffer(AbstractRingBuffer):
         self.size = self.n_samples / self.channels
         self.size_max = self.n_samples_max / self.channels
         self.sample_time = self.size / self.fs
+        self.max_sample_time = self.size_max / self.fs
 
     def _get_empty_array(self, samples):
         return np.empty((self.channels, samples), dtype=self.dest_type)
