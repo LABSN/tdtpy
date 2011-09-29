@@ -330,41 +330,11 @@ Then we open the speaker buffer for writing and write the data to the buffer::
     speaker_buffer.write(waveform)
 
 Now that you've configured the circuit, you are ready to run it and record the
-resulting waveform:: 
+resulting waveform.  The acquire method will block until the ``running`` tag
+becomes False then return the contents of the microphone buffer::
 
     microphone_buffer = circuit.get_buffer('microphone', 'r')
     data = microphone_buffer.acquire(1, 'running', False)
-
-The `DSPBuffer.acquire` method takes three arguments: 
-
-* The trigger to fire, initiating data acquisition.  If None, no trigger is
-  fired and acquire begins spooling data immediately.
-* The tag on the DSP to monitor.  
-* The value of the monitor tag that indicates data acquisition is done.
-
-Fire trigger 1 and continuously acquire data until ``running`` tag is False::
-
-    microphone_buffer.acquire(1, 'recording', False)
-
-Fire trigger 1 and continuously acquire data until ``complete`` tag is True::
-
-    microphone_buffer.acquire(1, 'complete', True)
-
-Get the initial value of ``toggle``, fire trigger 1, then continuously acquire
-data until the value of ``toggle`` changes::
-
-    microphone_buffer.acquire(1, 'toggle', True)
-
-Fire trigger 1 and continuously acquire data until ``index`` tag is greater or
-equal to 10000::
-
-    microphone_buffer.acquire(1, 'index', lambda x: x >= 1000)
-
-.. note::
-
-    The acquire method continuously donwloads data while monitoring the end
-    condition.  This allows you to acquire sets of data larger than the buffer
-    size without losing any data.
 
 Accessing the raw ActiveX object
 --------------------------------

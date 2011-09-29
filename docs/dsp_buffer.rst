@@ -177,11 +177,16 @@ quickly the buffer will fill up.
 8000
 >>> print buffer.size           # number of samples per channel
 500
+>>> print buffer.fs             # sampling frequency of buffer data
+12207.03125
+>>> print buffer.sample_time    # time (in seconds) to fill up the buffer
+0.04096
 
 In the above example, we know that even though the buffer can hold 8,000
 samples of data, it will fill up after only 500 samples of 16-channel data are
-collected.  This provides a useful metric for knowing whether we have set the
-buffer size appropriately.
+collected.  At a sampling frequency of 12 kHz, this means the buffer can only
+hold 41 msec of 16-channel data.  This provides a useful metric for knowing
+whether we have set the buffer size appropriately.
 
 n_slots
     Size in number of 32-bit words (the buffer's atomic unit of of storage)
@@ -204,3 +209,69 @@ n_samples_max
     Maximum size in number of samples
 size_max
     Maximum size in number of channels
+
+Acquiring segments of data
+--------------------------
+
+Two utility methods, `DSPBuffer.acquire` and `DSPBuffer.acquire_samples` are
+provided to facilitate the common task of acquiring a segment of data in
+response to some stimulus.  They both fire a trigger then continuously download
+data from the buffer until a certain end condition is met.  This end condition
+can either be the number of samples acquired or the value of a tag in th RPvds
+circuit.
+
+The `DSPBuffer.acquire` method takes three arguments: 
+
+* The trigger to fire, initiating data acquisition.  If None, no trigger is
+  fired and acquire begins spooling data immediately.
+* The tag on the DSP to monitor.  
+* The value of the monitor tag that indicates data acquisition is done.  If not
+  provided, the initial value of the tag will be retrieved before firing the
+  trigger.  In this situation, the end condition is met when the value of the
+  tag changes from its initial value.
+
+Fire trigger 1 and continuously acquire data until ``running`` tag is False::
+
+    microphone_buffer.acquire(1, 'recording', False)
+
+Fire trigger 1 and continuously acquire data until ``complete`` tag is True::
+
+    microphone_buffer.acquire(1, 'complete', True)
+
+Get the initial value of ``toggle``, fire trigger 1, then continuously acquire
+data until the value of ``toggle`` changes::
+
+    microphone_buffer.acquire(1, 'toggle')
+
+Continuously acquire until the value of the trial end timestamp, ``trial_end|``
+changes::
+
+    microphone_buffer.acquire(1, 'trial_end|')
+
+Fire trigger 1 and continuously acquire data until ``index`` tag is greater or
+equal to 10000::
+
+    microphone_buffer.acquire(1, 'index', lambda x: x >= 1000)
+
+Fire trigger 2 and acquire 100000 samples of data::
+
+    microphone_buffer.acquire_samples(2, 100000)
+
+.. note::
+
+    The acquire method continuously downloads data while monitoring the end
+    condition.  This allows you to acquire sets of data larger than the buffer
+    size without losing any data.  Just be sure that the poll interval is
+    short enough to grab new data before it gets overwritten.  To determine how
+    quickly your buffer will fill, check its `sample_time` attribute.
+
+.. note::
+
+    A very common mistake to make is setting the block size for the buffer to a
+    number that is not an integer divisor of the number of samples to be
+    acquired.  If you are acquiring 10000 samples of data and set the block size
+    to 1048, then both `DSPBuffer.acquire` and `DSPBuffer.acquire_samples` will
+    hang after acquiring 9432 samples since they are waiting for another 1048
+    samples to be acquired, but only 568 new samples are in the buffer.  If you
+    don't know in advance what the final length of the data will be, just leave
+    the block size at its default value of 1.
