@@ -19,9 +19,21 @@ class DSPCircuit(object):
     Provides several stringent checks and convenience methods to minimize
     programming errors and typos.
 
+    circuit_name : string
+        Path to circuit file.
+    device_name : string
+        Device to load circuit to.
+    device_id : number
+        ID of device
+    load : boolean (optional)
+        Load circuit to specified device.  Default is True. Set to False if you
+        just want to get a list of the tags available in the circuit.
+    start : boolean (optional)
+        Start (i.e. run) the circuit after loading it.  Default is False.
     '''
 
-    def __init__(self, circuit_name, device_name, device_id=1, load=True):
+    def __init__(self, circuit_name, device_name, device_id=1, load=True,
+            start=False):
         self.device_name = device_name
         self.circuit_name = split(circuit_name)[1]
         #self.circuit_path = abspath(circuit_name)
@@ -39,6 +51,9 @@ class DSPCircuit(object):
         else:
             self.read()
         self.inspect()
+
+        if start:
+            self.start()
 
     def __getstate__(self):
         '''
