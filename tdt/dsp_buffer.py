@@ -27,7 +27,7 @@ class DSPBuffer(AbstractRingBuffer):
             'block_size']
 
     def __init__(self, circuit, data_tag, idx_tag=None, size_tag=None,
-                 sf_tag=None, cycle_tag=None, dec_tag=None, block_size=4096,
+                 sf_tag=None, cycle_tag=None, dec_tag=None, block_size=1,
                  src_type='float32', dest_type='float32', channels=1):
 
         if data_tag not in circuit.tags:
@@ -206,6 +206,7 @@ class DSPBuffer(AbstractRingBuffer):
         self.size = self.n_samples / self.channels
         self.size_max = self.n_samples_max / self.channels
         self.sample_time = self.size / self.fs
+        self.max_sample_time = self.size_max / self.fs
 
     def _get_empty_array(self, samples):
         return np.empty((self.channels, samples), dtype=self.dest_type)
