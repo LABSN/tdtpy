@@ -16,11 +16,21 @@ log = logging.getLogger(__name__)
 INTERFACE = 'GB'
 
 DRIVERS = {
-        'RX6':  'RPcoX',
-        'ZBUS': 'ZBUSx',
-        'PA5':  'PA5x',
-        'RZ5':  'RPcoX',
-        'RZ6':  'RPcoX',
+        'RP2':   'RPcoX',
+        'RPA16': 'RPcoX',
+        'RL2':   'RPcoX',
+        'RV8':   'RPcoX',
+        'RM1':   'RPcoX',
+        'RM2':   'RPcoX',
+        'RX5':   'RPcoX',
+        'RX6':   'RPcoX',
+        'RX7':   'RPcoX',
+        'RX8':   'RPcoX',
+        'RZ2':   'RPcoX',
+        'RZ5':   'RPcoX',
+        'RZ6':   'RPcoX',
+        'ZBUS':  'ZBUSx',
+        'PA5':   'PA5x',
         }
 
 def connect_zbus():
