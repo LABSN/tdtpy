@@ -1,4 +1,4 @@
-:mod:`tdt.dsp_circuit` -- Wrapper for RPvds circuit objects
+:class:`tdt.DSPCircuit` -- Wrapper for RPvds circuit objects
 ===========================================================
 
 Wrapper around a RPvds circuit.
