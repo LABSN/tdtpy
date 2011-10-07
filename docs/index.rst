@@ -9,7 +9,9 @@ TDTPy Documentation
 .. note:: 
 
     We are still working on the documentation.  Much more to come in the next
-    few weeks.
+    few weeks.  We have only tested this code with a limited set of
+    configurations (e.g. the RZ5/RZ6 combo).  If this software does not work
+    with your configuration, that is considered a bug!
 
 .. module:: tdt
     :platform: Windows (requires proprietary ActiveX driver from TDT)
@@ -35,7 +37,6 @@ Contents:
 
 `tdt.DSPBuffer`
     A wrapper around a single DSP buffer object.
-
 
 Why use TDTPy?
 ==============
