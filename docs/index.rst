@@ -26,26 +26,17 @@ Contents:
     dsp_circuit.rst
     dsp_buffer.rst
     converting.rst
-
-`tdt.DSPProject`
-    A container for all circuits required for the experiment.
-
-`tdt.DSPCircuit` 
-    A wrapper around a single RPvds circuit.  Note that a single circuit maps to a
-    single device (i.e. you can only have one circuit running on a single DSP at
-    a time).
-
-`tdt.DSPBuffer`
-    A wrapper around a single DSP buffer object.
+    api.rst
 
 Why use TDTPy?
 ==============
 
 TDTPy is a Python wrapper around `Tucker-Davis Technologies`_ `ActiveX library`_
-[PDF link] for communicating with their System 3 hardware (e.g. the RP2.1, RX6,
-RZ6, etc.).  In addition to the standard operations (loading circuits,
-configuring tags and reading/writing to hardware buffers), TDTPy offers a number
-of high-level features that are not included in the ActiveX library:
+[PDF link] (known as RPcoX) for communicating with their System 3 hardware (e.g.
+the RP2.1, RX6, RZ6, etc.).  In addition to the standard operations (loading
+circuits, configuring tags and reading/writing to hardware buffers), TDTPy
+offers a number of high-level features that are not included in the ActiveX
+library:
 
 * Handling type conversion between analog and digital units (e.g. converting
   seconds to number of DSP cycles based on the CPU frequency of the hardware).
@@ -114,7 +105,7 @@ setting up and running experiments by providing high-level functionality.
   saving the data (i.e. you can dump it to a HDF5, XML, ASCII, CSV or MAT
   container).
 * Integrating OpenEx with your custom scripts is somewhat of a hack.  You must
-  launch OpenEx then launch your script.  TDTPy is part of your cript.
+  launch OpenEx then launch your script.  TDTPy is part of your script.
 * TDTPy comes with robust error-checking that catches many common coding
   mistakes (e.g. attempting to access a non-existent tag on the device) and a
   test-suite you can use to ensure your hardware is performing to spec.
@@ -342,41 +333,11 @@ Then we open the speaker buffer for writing and write the data to the buffer::
     speaker_buffer.write(waveform)
 
 Now that you've configured the circuit, you are ready to run it and record the
-resulting waveform:: 
+resulting waveform.  The acquire method will block until the ``running`` tag
+becomes False then return the contents of the microphone buffer::
 
     microphone_buffer = circuit.get_buffer('microphone', 'r')
     data = microphone_buffer.acquire(1, 'running', False)
-
-The `DSPBuffer.acquire` method takes three arguments: 
-
-* The trigger to fire, initiating data acquisition.  If None, no trigger is
-  fired and acquire begins spooling data immediately.
-* The tag on the DSP to monitor.  
-* The value of the monitor tag that indicates data acquisition is done.
-
-Fire trigger 1 and continuously acquire data until ``running`` tag is False::
-
-    microphone_buffer.acquire(1, 'recording', False)
-
-Fire trigger 1 and continuously acquire data until ``complete`` tag is True::
-
-    microphone_buffer.acquire(1, 'complete', True)
-
-Get the initial value of ``toggle``, fire trigger 1, then continuously acquire
-data until the value of ``toggle`` changes::
-
-    microphone_buffer.acquire(1, 'toggle', True)
-
-Fire trigger 1 and continuously acquire data until ``index`` tag is greater or
-equal to 10000::
-
-    microphone_buffer.acquire(1, 'index', lambda x: x >= 1000)
-
-.. note::
-
-    The acquire method continuously donwloads data while monitoring the end
-    condition.  This allows you to acquire sets of data larger than the buffer
-    size without losing any data.
 
 Accessing the raw ActiveX object
 --------------------------------
