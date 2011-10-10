@@ -157,12 +157,17 @@ class DSPCircuit(object):
         tag_unit : str
             Unit parameter tag requires
 
+        Returns
+        =======
+        Actual value of the tag (i.e. the converted value)
+
         Value will be converted from val_unit to tag_unit based on the sampling
         frequency of the device (if needed).  See :module:`convert` for more
         information.
         '''
         value = convert(val_unit, tag_unit, value, self.fs)
         self.set_tag(name, value)
+        return value
 
     def get_tag(self, name):
         '''

@@ -30,10 +30,11 @@ Why use TDTPy?
 ==============
 
 TDTPy is a Python wrapper around `Tucker-Davis Technologies`_ `ActiveX library`_
-[PDF link] for communicating with their System 3 hardware (e.g. the RP2.1, RX6,
-RZ6, etc.).  In addition to the standard operations (loading circuits,
-configuring tags and reading/writing to hardware buffers), TDTPy offers a number
-of high-level features that are not included in the ActiveX library:
+[PDF link] (known as RPcoX) for communicating with their System 3 hardware (e.g.
+the RP2.1, RX6, RZ6, etc.).  In addition to the standard operations (loading
+circuits, configuring tags and reading/writing to hardware buffers), TDTPy
+offers a number of high-level features that are not included in the ActiveX
+library:
 
 * Handling type conversion between analog and digital units (e.g. converting
   seconds to number of DSP cycles based on the CPU frequency of the hardware).
