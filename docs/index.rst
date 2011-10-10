@@ -17,8 +17,14 @@ TDTPy Documentation
     :platform: Windows (requires proprietary ActiveX driver from TDT)
 .. moduleauthor:: Brad Buran <bburan@alum.mit.edu>
 
-Contents:
+.. note::
 
+    If you use the remote procedure call (RPC) server provided by TDTPy to
+    communicate with your hardware your client code should be able to run on any
+    platform including Unix, Linux and OSX).  The RPC server, however, requires
+    the proprietary ActiveX drivers provided by TDT which only run on Windows.
+
+Contents:
 
 .. toctree::
     :maxdepth: 2
@@ -40,10 +46,15 @@ library:
 
 * Handling type conversion between analog and digital units (e.g. converting
   seconds to number of DSP cycles based on the CPU frequency of the hardware).
-* Optional non-blocking input/output by launching TDTPy in a subprocess to free
-  up your script for other tasks.  This is particularly useful when you are
-  downloading large (e.g. 64 or more channels of neurophysiology) amounts of
-  data from the hardware.
+* Remote procedure call (RPC) server for allowing multiple processes and/or programs
+  to communicate with the hardware across the same connection.  The drivers
+  provided by TDT do not handle concurrency issues.  To handle these issues, we
+  have created a RPC server that handles concurrency issues, allowing multiple
+  programs to talk to the hardware simultaneously.  The programs can either run
+  on the same computer or on a separate computer.
+* If you use the RPC server, your client code can run on any platform (e.g. Mac
+  OSX, Unix, Solaris, etc); however, the server must run on a Windows-based
+  computer.
 * Simple reads and writes.  The hardware buffers are implemented as "ring
   buffers" with various features such as multichannel storage and data
   compression.  TDTPy automatically detects the configuration of the hardware
@@ -350,14 +361,103 @@ Accessing the raw ActiveX object
 --------------------------------
 Although DSPCircuit and DSPBuffer expose most of the functionality available via
 the ActiveX object, there may be times when you need to access it directly.  You
-may obtain a handle to the object via the function `tdt.util.connect`::
+may obtain a handle to the object via the function `tdt.util.connect_rpcox`::
 
-    from tdt.util import connect
-    obj = connect('RZ6', 'GB')
+    from tdt.util import connect_rpcox
+    obj = connect_rpcox('RZ6', 'GB')
 
-Running I/O in a separate process
----------------------------------
-TODO
+Running I/O in a separate process or on a separate computer
+-----------------------------------------------------------
+
+.. note::
+
+    This code definitely works, and is reasonably fast on a localhost
+    connection.  When I tested it via a client connecting using the wireless
+    network there were some latency issues.  There are likely many speedups that
+    can be implemented, but I don't have the time to do so right now.
+
+Since all TDT devices share the same connection with the computer, we can only
+talk to a single device at a time.  Unfortunately, TDT's hardware drivers do not
+handle the requisite concurrent access issues, meaning that only one program
+and/or process can safely use the hardware connection (e.g. the optical or USB
+interface) at a time even if each process communicates with a different device.
+Since we have two separate programs (one for generating the stimulus via the RZ6
+and one for acquiring the physiology via the RZ5), we needed to find a way to
+handle the requisite concurrency issues.
+
+The simplest way to handle concurrency was to create a remote procedure call
+(RPC) server.  This RPC server will listen for connections from clients
+(either from the same computer or on a networked computer).  Each client will
+initiate a persistent connection for the lifetime of the program and send
+requests via a TCP protocol.  As these requests come in, the server will process
+them sequentially (thus handling concurrency issues).  
+
+A thread-based design for the server was considered; however, the bottleneck
+currently is in the optical interface I/O speed so it is unlikely that the
+additional hassle and overhead of threading will provide any significant
+performance gain.
+
+The server is meant to be a relatively thin layer around the ActiveX device
+driver.  Requests from clients are essentially passed directly to the ActiveX
+interface itself.  To facilitate using this code we've created a network-aware
+proxy of the RPcoX client that passes off all RPcoX method calls directly to the
+RPC server.  This allows you to use the server in your code without having to
+rewrite your code to use `tdt.DSPProject` or `tdt.DSPCircuit`.  Assuming your
+code uses `win32com.client` directly rather than using TDTPy's abstraction
+layer, the following code::
+
+    from win32com.client import Dispatch
+    iface = Dispatch('RPco.X')
+    iface.ConnectRZ6('GB', 1)
+    zbus = Dispatch('ZBUSx')
+
+can simply be converted to a network-aware version via::
+
+    from tdt.dsp_server import RPcoXNET, zBUSNET
+    host, port = 'localhost', 13131
+    iface = RPcoXNET(address=(host, port))
+    iface.ConnectRZ6('GB', 1)
+    zbus = zBUSNET(address=(host, port))
+
+Even if you prefer not to use the TDTPy abstraction layer (e.g.
+`tdt.DSPProject`, `tdt.DSPCircuit` and `tdt.DSPBuffer`), I highly recommend
+using TDTPy to obtain a handle to the ActiveX drivers since we have
+monkeypatched the win32com connection to speed up certain calls to the ActiveX
+drivers.  To obtain a handle to the standard ActiveX drivers using TDTPy::
+
+    from tdt.util import connect_rpcox, connect_zbus
+    iface = connect_rpcox('RZ6')
+    zbus = connect_zbus()
+
+To obtain a handle to the network-aware proxy using TDTPy, provide the address
+argument::
+
+    from tdt.util import connect_rpcox, connect_zbus
+    host, port = 'localhost', 13131
+    iface = connect_rpcox('RZ6', address=(host, port))
+    zbus = connect_zbus(address=(host, port))
+
+If you're using the TDTPy abstraction layer, simply provide an address argument
+when initializing the DSPCircuit class::
+    
+    from tdt import DSPCircuit
+    host, port = 'localhost', 13131
+    circuit = DSPCircuit('play_record.rcx', 'RZ6', address=(host, port))
+
+Now that you've rewritten  your code to use the networked version of TDTPy, you
+need to start the server.  Open up a command prompt on the host computer and
+type::
+
+    >>> python -m tdt.dsp_server :13131
+
+Now, run your client code!
+
+.. note::
+
+    The ActiveX drivers require a path to the circuit file that must be loaded
+    to the hardware.  The circuit files *can* be stored on the client.  The network
+    proxy, RPcoXNET will handle transferring the circuit files to the server for
+    you.
 
 Indices and tables
 ==================
