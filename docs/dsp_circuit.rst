@@ -87,6 +87,11 @@ If the output of the tag reflects an epoch boundary, use the '/' suffix to
 indicate the start and '\' to indicate the end.  If it is simply a point in time
 (i.e. a timestamp), use the '|' suffix.
 
+If the tag requires a certain unit (e.g. msec or number of samples), be sure to
+indicate the unit in the tag name using the appropriate suffix.  For example,
+tags requiring a value in msec should have the suffix '_ms' and tags requiring
+the number of samples should have the suffix '_n'.
+
 Hop naming
 ..........
 Use the '_start' and '_end' suffix to indicate the hop reflects a logical value

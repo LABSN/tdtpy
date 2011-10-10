@@ -52,11 +52,11 @@ library:
 * Robust error handling.  Some methods in the ActiveX library will fail silently
   (e.g. if you try to access a nonexistent tag or attempt to write more data
   than the hardware buffer can hold).  When the RPvds circuit is first loaded to
-  the hardware, TDTPy will inspect the microcode and store some infomration
-  about the tags and buffers available.  All subsequent operations are validated
-  against this metadata before being passed to the ActiveX library.  If an
-  invalid operation is attempted, a DSPError is raised with the appropriate
-  message.
+  the hardware, TDTPy will inspect the microcode (i.e. the RPvds circuit) and
+  store some information about the tags and buffers available.  All subsequent
+  operations are validated against this metadata before being passed to the
+  ActiveX library.  If an invalid operation is attempted, a DSPError is raised
+  with the appropriate message.
 
 Furthermore, TDTPy was as written as part of an initial progress towards a
 hardware abstraction layer.  Your experiment code should not care whether you're
@@ -322,12 +322,19 @@ All three of the  approaches are fine; however, we recommend that you use
 readable.  
 
 To write a 1 second, 1 kHz tone to the speaker buffer, we first generate the
-waveform::
+waveform using the sampling frequency of the circuit.  The sampling frequency is
+available as an attribute, `fs` of the DSPCircuit class.  A method,
+:func:DSPCircuit.convert` facilitates unit conversions that are based on the
+sampling frequency of the circuit (e.g. :math:`duration*fs` will convert
+duration, in seconds, to the number of sample required for the waveform)::
 
-    t = arange(0, dsp.convert('s', 'n', 1))/dsp.fs
+    t = arange(0, circuit.convert('s', 'n', 1))/circuit.fs
     waveform = sin(2*pi*1e3*t)
 
-Then we open the speaker buffer for writing and write the data to the buffer::
+Then we open the speaker buffer for writing and write the data to the buffer.
+The first argument to :func:`DSPCircuit.get_buffer` is the name of the tag
+attached to the ``{>Data}`` port of the buffer component and the second argument
+indicates whether the buffer should be opened for reading (r) or writing (w)::
 
     speaker_buffer = circuit.get_buffer('speaker', 'w')
     speaker_buffer.write(waveform)
