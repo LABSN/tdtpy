@@ -132,15 +132,13 @@ class TDTRPCServer(object):
     All subsequent methods on this client will go directly to the RZ5. 
     '''
 
-    def __init__(self, host='', port=13131, connections=2, interface='GB'):
-        self._host = host
-        self._port = port
+    def __init__(self, address, connections=2, interface='GB'):
         self._connections = 2
         self._server = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-        self._server.bind((host, port))
+        self._server.bind(address)
         self._server.listen(connections)
         self._socks = [self._server]
-        log.info('server running on %s:%s', host, port)
+        log.info('server running on %s:%s', *address)
 
         # A list of all devices that the server is connected to.  Since each
         # device has its own COM object instance, we need to maintain a map of
@@ -331,8 +329,15 @@ def test_client():
     #print client.get_result(mid)
 
 if __name__ == '__main__':
-    import sys
-    if sys.argv[1] == 'server':
-        TDTRPCServer().run_forever()
-    elif sys.argv[1] == 'client':
-        test_client()
+    import argparse
+
+    class ParseAddress(argparse.Action):
+
+        def __call__(self, parser, args, value, option_string=None):
+            host, port = value.split(':')
+            setattr(args, self.dest, (host, int(port)))
+
+    parser = argparse.ArgumentParser(description='Run TDT System 3 RPC server')
+    parser.add_argument('address', action=ParseAddress, default=('', 13131))
+    args = parser.parse_args()
+    TDTRPCServer(address=args.address).run_forever()
