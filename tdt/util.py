@@ -14,36 +14,17 @@ import dsp_server
 import logging
 log = logging.getLogger(__name__)
 
-INTERFACE = 'GB'
-
-DRIVERS = {
-        'RP2':   'RPcoX',
-        'RPA16': 'RPcoX',
-        'RL2':   'RPcoX',
-        'RV8':   'RPcoX',
-        'RM1':   'RPcoX',
-        'RM2':   'RPcoX',
-        'RX5':   'RPcoX',
-        'RX6':   'RPcoX',
-        'RX7':   'RPcoX',
-        'RX8':   'RPcoX',
-        'RZ2':   'RPcoX',
-        'RZ5':   'RPcoX',
-        'RZ6':   'RPcoX',
-        'ZBUS':  'ZBUSx',
-        'PA5':   'PA5x',
-        }
-
-def connect_zbus(address=None):
+def connect_zbus(interface='GB', address=None):
     '''
     Connect to the zBUS interface and set zBUS triggers to low
     '''
+    print interface, address
     try:
         if address is not None:
             driver = dsp_server.zBUSNET(address)
         else:
             driver = actxobjects.ZBUSx()
-        if not driver.ConnectZBUS(INTERFACE):
+        if not driver.ConnectZBUS(interface):
             raise DSPError("zBUS", "Connection failed")
         log.debug("Connected to zBUS")
 
@@ -57,7 +38,7 @@ def connect_zbus(address=None):
     except pywintypes.com_error:
         raise ImportError, 'ActiveX drivers not installed'
 
-def connect_rpcox(name, ID=1, address=None):
+def connect_rpcox(name, interface='GB', device_id=1, address=None):
     '''
     Connect to device
 
@@ -65,12 +46,12 @@ def connect_rpcox(name, ID=1, address=None):
     port will be initiated and the network-aware RPcoX wrapper will be returned,
     otherwise the actual RPcoX object will be used.
     '''
-    debug_string = '%s %d via %s interface' % (name, ID, INTERFACE)
+    debug_string = '%s %d via %s interface' % (name, device_id, interface)
     if address is None:
         driver = actxobjects.RPcoX()
     else:
         driver = dsp_server.RPcoXNET(address)
-    if not getattr(driver, 'Connect%s' % name)(INTERFACE, ID):
+    if not getattr(driver, 'Connect%s' % name)(interface, device_id):
         raise DSPError(name, "Connection failed")
     log.debug("Connected to %s", name)
     return driver

@@ -23,6 +23,10 @@ class DSPCircuit(object):
         Path to circuit file.
     device_name : string
         Device to load circuit to.
+    interface : {'GB', 'USB'}
+        Interface to use (see TDT's ActiveX documentation on the Connect*
+        methods for more information).  You almost certainly want 'GB' (which is
+        the default value).
     device_id : number
         ID of device
     load : boolean (optional)
@@ -36,19 +40,21 @@ class DSPCircuit(object):
         TDT implementation of the RPcoX and zBUSx drivers.
     '''
 
-    def __init__(self, circuit_name, device_name, device_id=1, load=True,
-            start=False, fs=None, address=None):
+    def __init__(self, circuit_name, device_name, interface='GB', device_id=1,
+            load=True, start=False, fs=None, address=None):
         self.device_name = device_name
         self.circuit_name = split(circuit_name)[1]
         #self.circuit_path = abspath(circuit_name)
-        self.device_id = id
+        self.device_id = device_id
         self.server_address = address
+        self.interface= interface
 
         # Hint for Matlab users: _iface is the same COM object a Matlab user
         # typically works with when they call actxserver('RPco.X').  It supports
         # the exact same methods as the Matlab version.
-        self._iface = connect_rpcox(device_name, address=address)
-        self._zbus  = connect_zbus(address=address)
+        self._iface = connect_rpcox(device_name, interface=interface,
+                device_id=device_id, address=address)
+        self._zbus  = connect_zbus(interface=interface, address=address)
         self.circuit_path = get_cof_path(abspath(circuit_name))
         if load:
             self.load()
