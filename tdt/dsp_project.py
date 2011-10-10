@@ -7,10 +7,11 @@ log = logging.getLogger(__name__)
 
 class DSPProject(object):
 
-    def __init__(self, address=None):
+    def __init__(self, address=None, interface='GB'):
         self._circuit_info = {}
         self._circuits = {}
-        self._zbus  = connect_zbus(address)
+        self._zbus  = connect_zbus(interface=interface, address=address)
+        self._interface = interface
         self.server_address = address
         atexit.register(self.stop)
 
@@ -19,7 +20,7 @@ class DSPProject(object):
         # We need to store a reference to the circuit here so we can properly
         # initialize any buffers we need
         circuit = DSPCircuit(circuit_name, device_name,
-                address=self.server_address)
+                address=self.server_address, interface=self._interface)
         self._circuits[device_name] = circuit
         return circuit
 
