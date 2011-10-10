@@ -3,7 +3,7 @@ import atexit
 import numpy as np
 import time
 
-from util import get_cof_path, connect_zbus, connect
+from util import get_cof_path, connect_zbus, connect_rpcox
 from dsp_buffer import ReadableDSPBuffer, WriteableDSPBuffer
 from convert import convert
 from dsp_error import DSPError
@@ -30,19 +30,25 @@ class DSPCircuit(object):
         just want to get a list of the tags available in the circuit.
     start : boolean (optional)
         Start (i.e. run) the circuit after loading it.  Default is False.
+    address : two-tuple (str, int)
+        Connect to the address specified as a two-tuple in (host, port) format
+        using the network-aware proxy of TDT's driver.  If None, defaults to the
+        TDT implementation of the RPcoX and zBUSx drivers.
     '''
 
     def __init__(self, circuit_name, device_name, device_id=1, load=True,
-            start=False):
+            start=False, fs=None, address=None):
         self.device_name = device_name
         self.circuit_name = split(circuit_name)[1]
         #self.circuit_path = abspath(circuit_name)
         self.device_id = id
+        self.server_address = address
+
         # Hint for Matlab users: _iface is the same COM object a Matlab user
         # typically works with when they call actxserver('RPco.X').  It supports
         # the exact same methods as the Matlab version.
-        self._iface = connect(device_name)
-        self._zbus  = connect_zbus()
+        self._iface = connect_rpcox(device_name, address=address)
+        self._zbus  = connect_zbus(address=address)
         self.circuit_path = get_cof_path(abspath(circuit_name))
         if load:
             self.load()
@@ -73,7 +79,7 @@ class DSPCircuit(object):
         '''
         self.__dict__.update(state)
         self._iface = connect(self.device_name)
-        self._zbus  = connect_zbus()
+        self._zbus = connect_zbus(self.server_address)
         self.read()
 
     def read(self):
