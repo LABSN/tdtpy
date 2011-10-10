@@ -9,6 +9,7 @@ except:
     pass
 
 from dsp_error import DSPError
+import dsp_server
 
 import logging
 log = logging.getLogger(__name__)
@@ -23,32 +24,42 @@ DRIVERS = {
         'RZ6':  'RPcoX',
         }
 
-def connect_zbus():
+def connect_zbus(address=None):
     '''
-    Connect to the zBUS interface and set zBUS triggeres to low
+    Connect to the zBUS interface and set zBUS triggers to low
     '''
     try:
-        zbus = actxobjects.ZBUSx()
-        if not zbus.ConnectZBUS(INTERFACE):
+        if address is not None:
+            driver = dsp_server.zBUSNET(address)
+        else:
+            driver = actxobjects.ZBUSx()
+        if not driver.ConnectZBUS(INTERFACE):
             raise DSPError("zBUS", "Connection failed")
         log.debug("Connected to zBUS")
 
         # zBUS trigger is set to high for record mode, so ensure that both
         # triggers are initialized to low.
-        zbus.zBusTrigA(0, 2, 10)
-        zbus.zBusTrigB(0, 2, 10)
+        driver.zBusTrigA(0, 2, 10)
+        driver.zBusTrigB(0, 2, 10)
         log.debug("Set zBusTrigA to low")
         log.debug("Set zBusTrigB to low")
-        return zbus
+        return driver
     except pywintypes.com_error:
         raise ImportError, 'ActiveX drivers not installed'
 
-def connect(name, ID=1):
+def connect_rpcox(name, ID=1, address=None):
     '''
     Connect to device
+
+    If server and port are not None, a connection to the specified server and
+    port will be initiated and the network-aware RPcoX wrapper will be returned,
+    otherwise the actual RPcoX object will be used.
     '''
     debug_string = '%s %d via %s interface' % (name, ID, INTERFACE)
-    driver = getattr(actxobjects, DRIVERS[name])()
+    if address is None:
+        driver = actxobjects.RPcoX()
+    else:
+        driver = dsp_server.RPcoXNET(address)
     if not getattr(driver, 'Connect%s' % name)(INTERFACE, ID):
         raise DSPError(name, "Connection failed")
     log.debug("Connected to %s", name)
