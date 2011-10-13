@@ -37,6 +37,12 @@ def atten_to_bits(attA, attB, mute=False):
     return RZ6_ATTEN_BASE | attA | attB | mute
 
 def waveform_to_bits(waveform, sf):
+    '''
+    Scale and convert waveform to the binary data that needs to be inserted
+    (i.e. poked) into memory address 15 (for Out-A) or 16 (for Out-B).  This can
+    replace the computations performed in the RZ6 AudioOut macro which take up
+    to 4% of CPU time at 100 kHz.
+    '''
     waveform = np.asanyarray(waveform)
     waveform = waveform*sf*2e8
     waveform = waveform.astype('i')
