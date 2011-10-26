@@ -18,7 +18,6 @@ def connect_zbus(interface='GB', address=None):
     '''
     Connect to the zBUS interface and set zBUS triggers to low
     '''
-    print interface, address
     try:
         if address is not None:
             driver = dsp_server.zBUSNET(address)
