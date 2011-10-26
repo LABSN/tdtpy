@@ -8,8 +8,8 @@ def split_attenuation(att):
     setting the hardware attenuator (the RZ6 attenuator can be set to 0, 20, 40
     or 60 dB) and the second that must be realized by scaling the waveform.
 
-    Returns
-    -------
+    Returns (hw_attenuation, sw_attenuation)
+    ----------------------------------------
     hw_attenuation : float
         hardware attenuation setting
     sw_attenuation : float
@@ -30,7 +30,14 @@ def atten_to_bits(attA, attB, mute=False):
     inserted into memory address 2 on the RZ6 to set the hardware attenuators
     accordingly.  This can replace the computations perfomed in the RZ6 AudioOut
     macro which takes up to 12% of CPU time at 100 kHz.
+
+    Raises ValueError if requested attenuation falls outside range of valid
+    values.
     '''
+    if not (0 <= attA <= 120):
+        raise ValueError, "Attenuation A must be between 0 and 120 dB"
+    if not (0 <= attB <= 120):
+        raise ValueError, "Attenuation B must be between 0 and 120 dB"
     attA = min(int(attA/20), 3)
     attB = min(int(attB/20), 3) << 4
     mute = int(mute) * 256
@@ -39,9 +46,10 @@ def atten_to_bits(attA, attB, mute=False):
 def waveform_to_bits(waveform, sf):
     '''
     Scale and convert waveform to the binary data that needs to be inserted
-    (i.e. poked) into memory address 15 (for Out-A) or 16 (for Out-B).  This can
-    replace the computations performed in the RZ6 AudioOut macro which take up
-    to 4% of CPU time at 100 kHz.
+    (via the RPvds poke component) into memory address 15 (for Out-A) or 16 (for
+    Out-B).  This replaces the computations performed in the RZ6 AudioOut macro
+    which take up to 4% of CPU time at 100 kHz.  Used in combination wtih
+    atten_to_bits, you can free up 16% of CPU time.
     '''
     waveform = np.asanyarray(waveform)
     waveform = waveform*sf*2e8
@@ -102,6 +110,12 @@ class TestRZ6Functions(unittest.TestCase):
         for a, b, expected in self.ATTEN_TEST_VALUES:
             actual = atten_to_bits(a, b)
             self.assertEqual(actual, expected)
+
+        # Ensure out of range attenuations raise an error
+        self.assertRaises(ValueError, atten_to_bits, 0, 121)
+        self.assertRaises(ValueError, atten_to_bits, 0, -1)
+        self.assertRaises(ValueError, atten_to_bits, 121, 0)
+        self.assertRaises(ValueError, atten_to_bits, -1, 0)
 
 if __name__ == '__main__':
     unittest.main()
