@@ -270,7 +270,7 @@ class DSPCircuit(object):
             mesg = "Exactly %d values must be written to tag %s"
             raise DSPError(self, mesg % (tag_size, name))
         if not self._iface.WriteTagV(name, 0, data):
-            raise DSPError(self, "Unable to upload data to buffer %s", name)
+            raise DSPError(self, "Unable to upload data to buffer %s" % name)
 
     def start(self, pause=0.25):
         '''
@@ -319,7 +319,7 @@ class DSPCircuit(object):
             self._zbus.zBusTrigB(0, mode_enum[mode], 10)
         elif (1 <= trigger < 10) and mode == 'pulse':
             if not self._iface.SoftTrg(trigger):
-                raise DSPError(self, "Could not fire soft trigger %d", trigger)
+                raise DSPError(self, "Could not fire soft trigger %d" % trigger)
         else:
             mesg = "Unsupported trigger mode %s %s" % (trigger, mode)
             raise DSPError(self, mesg)
