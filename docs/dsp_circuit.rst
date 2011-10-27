@@ -42,6 +42,16 @@ tags : dictionary
     defines the available tag types.  For simple types (e.g. integer, float and
     boolean), the tag size will always be 1.  For buffer types, the size will
     indicate the number of 32 bit words in the buffer.
+scalar_tags : list
+    List of tag names present in the DSP microcode that have a tag size of 1
+    (i.e. a scalar value such as an integer, float or boolean).
+vector_tags : list
+    List of tag tag names (i.e. variables) present in the DSP microcode that
+    have a tag size >= 1 (i.e. buffer or coefficient tag).
+circuit_name : str
+    Name of circuit currently loaded
+circuit_path : str
+    Full path of circuit on disk
 
 Error handling
 --------------
