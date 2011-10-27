@@ -119,6 +119,8 @@ class DSPCircuit(object):
         # Inspect COF for available tags and their type/size
         num_tags = self._iface.GetNumOf('ParTag')
         self.tags = {}
+        self.scalar_tags = []
+        self.vector_tags = []
         for i in range(num_tags):
             name = self._iface.GetNameOf('ParTag', i+1)
             if not name.startswith('%'):
@@ -128,6 +130,10 @@ class DSPCircuit(object):
                     raise DSPError(self, mesg)
                 tag_type = self._iface.GetTagType(name)
                 self.tags[name] = (tag_size, tag_type)
+                if tag_size == 1:
+                    self.scalar_tags.append(name)
+                else:
+                    self.vector_tags.append(name)
                 log.debug("%s: found %s (size %d, type %s)", self, name,
                           tag_size, tag_type)
         self.fs = self._iface.GetSFreq()
