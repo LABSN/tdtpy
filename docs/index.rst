@@ -158,9 +158,23 @@ with this tool by default)::
 
     $ easy_install pip
 
-Once it's installed, install a copy of Mercurial (Hg) if you haven't already::
+Once it's installed, install a copy of Mercurial (Hg) if you haven't already.
+The source code for TDTPy is managed via the Mercurial distributed version
+control system and pip requires the Hg binary to checkout a copy of TDTPy::
 
-    $ pip install hg
+    $ pip install mercurial
+
+.. note::
+
+    Installing Mercurial from source requires a working compiler.  If the above
+    command fails with the error message, "unable to find vcvarsall.bat", you
+    need to install a compiler.  On Windows, you can install Microsoft Visual
+    Studio 2008 Express (the `version of Visual Studio`_ is important).
+    Alternatively, it may be much easier to just install the TortoiseHg_
+    binaries
+
+.. _TortoiseHg: http://tortoisehg.bitbucket.org/
+.. _version of Visual Studio: http://slacy.com/blog/2010/09/python-unable-to-find-vcvarsall-bat
 
 Now, install TDTPy::
 
@@ -179,7 +193,20 @@ To install a local copy of TDTPy that you can edit::
 Code example
 ------------
 
-The following examples are based on the following RPvds circuit:
+.. note:: 
+
+    Familiarity with TDT's real-time processor visual design studio (RPvds) is
+    required to follow the example below.  See the `RPvds manual`_ for more
+    information.
+
+The following examples are based on the following RPvds circuit.  If you wish to
+test the circuit you may need to adapt it for your specific device (e.g. on the
+RX6 the correct input channel for the microphone would be 128 and on the RZ6 you
+would use the AudioIn and AudioOut macros).  The specifics for each device are
+described in TDT's `System 3 manual`_.
+
+.. _RPvds manual: http://www.tdt.com/T2Download/manuals/RPvdsEx_Manual.pdf 
+.. _System 3 manual: http://www.tdt.com/T2Download/manuals/TDTSys3_Manual.pdf 
 
 .. image:: example_circuit.*
 
@@ -339,7 +366,7 @@ available as an attribute, `fs` of the DSPCircuit class.  A method,
 sampling frequency of the circuit (e.g. :math:`duration*fs` will convert
 duration, in seconds, to the number of sample required for the waveform)::
 
-    t = arange(0, circuit.convert('s', 'n', 1))/circuit.fs
+    t = arange(0, circuit.convert(1, 's', 'n'))/circuit.fs
     waveform = sin(2*pi*1e3*t)
 
 Then we open the speaker buffer for writing and write the data to the buffer.
