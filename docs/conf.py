@@ -20,7 +20,8 @@ class Mock(object):
         pass
     def __getattr__(self, name):
         return Mock
-for mod_name in ('numpy', 'win32com'):
+
+for mod_name in ('numpy', 'win32com', 'tdt.actxobjects'):
     sys.modules[mod_name] = Mock()
 
 # If extensions (or modules to document with autodoc) are in another directory,
