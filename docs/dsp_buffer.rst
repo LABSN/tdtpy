@@ -275,3 +275,6 @@ Fire trigger 2 and acquire 100000 samples of data::
     samples to be acquired, but only 568 new samples are in the buffer.  If you
     don't know in advance what the final length of the data will be, just leave
     the block size at its default value of 1.
+
+    To prevent this from happening, a ValueError will be raised if you attempt
+    to acquire a number of samples that is not a multiple of block size.

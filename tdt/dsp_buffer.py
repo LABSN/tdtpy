@@ -334,6 +334,9 @@ class DSPBuffer(AbstractRingBuffer):
         '''
         Fire trigger and acquire n samples
         '''
+        if samples % self.block_size:
+            mesg = "Number of samples must be a multiple of block size"
+            raise ValueError, mesg
         log.debug('%s: attempting to acquire %d samples', self, samples)
         is_done = lambda b, s: s >= samples
         return self._acquire(trigger, end_condition=is_done, samples=samples,
