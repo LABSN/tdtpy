@@ -1,19 +1,19 @@
 import time
 import numpy as np
-from array import array
 
-from util import dtype_to_type_str, best_sf, resolution
-from dsp_error import DSPError
-
-from constants import RCX_BUFFER
-from abstract_ring_buffer import AbstractRingBuffer 
+from .util import dtype_to_type_str, resolution
+from .dsp_error import DSPError
+from .constants import RCX_BUFFER
+from .abstract_ring_buffer import AbstractRingBuffer 
 
 import logging
 log = logging.getLogger(__name__)
 
 class DSPBuffer(AbstractRingBuffer):
     '''
-    Given the circuit object and tag name, return a buffer object
+    Given the circuit object and tag name, return a buffer object that serves as
+    a wrapper around a SerStore or SerSource component.  See the TDTPy
+    documentation for more detail on buffers.
     '''
 
     # List of all attributes available.  The majority of these attributes are

@@ -1,8 +1,8 @@
 from comtypes import client
-from numpy import random, equal, ones
+from numpy import random
 from array import array
 from win32com import client as wclient
-from actxobjects import RPcoX
+from .actxobjects import RPcoX
 
 com_iface = client.CreateObject('RPco.X')
 win_iface = wclient.Dispatch('RPco.X')

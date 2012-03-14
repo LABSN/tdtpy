@@ -1,15 +1,14 @@
 import time
 import ctypes 
 import multiprocessing as mp
-import numpy as np
 import itertools
 
 import logging
 log = logging.getLogger(__name__)
 
-from util import shmem_as_ndarray, NP_TO_CTYPES
-from dsp_circuit import DSPCircuit
-from shared_ring_buffer import ReadableSharedRingBuffer, \
+from .util import shmem_as_ndarray, NP_TO_CTYPES
+from .dsp_circuit import DSPCircuit
+from .shared_ring_buffer import ReadableSharedRingBuffer, \
         WriteableSharedRingBuffer
 
 def monitor(circuit_info, poll_period, pipe):

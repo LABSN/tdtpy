@@ -2,14 +2,9 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 
 import unittest
-from dsp_circuit import DSPCircuit
-from dsp_error import DSPError
-from dsp_process import DSPProcess
+from .dsp_circuit import DSPCircuit
 import numpy as np 
 import time
-from os import remove
-
-import cPickle as pickle
 
 #class TestPickling(unittest.TestCase):
 #
