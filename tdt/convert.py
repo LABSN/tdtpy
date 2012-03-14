@@ -1,5 +1,3 @@
-import re
-
 def ispow2(n):
     '''
     True if n is a power of 2, False otherwise

@@ -1,13 +1,14 @@
 from cStringIO import StringIO
 from tempfile import NamedTemporaryFile
 import uuid
-import actxobjects
-import socket, struct, time
+from . import actxobjects
+import socket, struct
 from select import select
 import cPickle as pickle
 import numpy as np
 import logging
 import os
+
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler())

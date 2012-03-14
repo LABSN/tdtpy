@@ -1,4 +1,4 @@
-from dsp_process import DSPProcess
+from .dsp_process import DSPProcess
 import time
 
 def main():

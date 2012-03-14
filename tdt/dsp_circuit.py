@@ -3,11 +3,11 @@ import atexit
 import numpy as np
 import time
 
-from util import get_cof_path, connect_zbus, connect_rpcox
-from dsp_buffer import ReadableDSPBuffer, WriteableDSPBuffer
-from convert import convert
-from dsp_error import DSPError
-from constants import RCX_COEFFICIENT, RCX_CAST, RCX_STATUS_BITMASK
+from .util import get_cof_path, connect_zbus, connect_rpcox
+from .dsp_buffer import ReadableDSPBuffer, WriteableDSPBuffer
+from .convert import convert
+from .dsp_error import DSPError
+from .constants import RCX_COEFFICIENT, RCX_CAST, RCX_STATUS_BITMASK
 
 import logging
 log = logging.getLogger(__name__)
@@ -58,7 +58,6 @@ class DSPCircuit(object):
         self.circuit_path = get_cof_path(abspath(circuit_name))
         if load:
             self.load()
-            import atexit
             atexit.register(self.stop)
         else:
             self.read()
@@ -84,7 +83,7 @@ class DSPCircuit(object):
         Loads the state and reconnects the COM objects
         '''
         self.__dict__.update(state)
-        self._iface = connect(self.device_name)
+        self._iface = connect_rpcox(self.device_name)
         self._zbus = connect_zbus(self.server_address)
         self.read()
 
@@ -308,7 +307,7 @@ class DSPCircuit(object):
             Fire the specified trigger.  If integer, this corresponds to
             RPco.X.SoftTrg.  If 'A' or 'B', this fires the corresponding zBUS
             trigger.
-        mode : 'pulse' or 'high' or 'low'
+        mode : {'pulse', 'high', 'low'}
             Relevant only when trigger is 'A' or 'B'.  Indicates the
             corresponding mode to set the zBUS trigger to
 
