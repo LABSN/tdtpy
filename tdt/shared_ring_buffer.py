@@ -1,9 +1,8 @@
-import time
 import logging
 log = logging.getLogger(__name__)
 import numpy as np
 
-from abstract_ring_buffer import AbstractRingBuffer
+from .abstract_ring_buffer import AbstractRingBuffer
 
 class SharedRingBuffer(AbstractRingBuffer):
     '''

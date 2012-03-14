@@ -8,8 +8,8 @@ try:
 except:
     pass
 
-from dsp_error import DSPError
-import dsp_server
+from .dsp_error import DSPError
+from . import dsp_server
 
 import logging
 log = logging.getLogger(__name__)

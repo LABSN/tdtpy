@@ -1,5 +1,6 @@
-from util import connect_zbus
-from dsp_circuit import DSPCircuit
+from .util import connect_zbus
+from .dsp_circuit import DSPCircuit
+from .dsp_error import DSPError
 import atexit
 
 import logging
