@@ -6,19 +6,19 @@ Wrapper around a RPvds circuit.
 >>> from tdt import DSPCircuit
 >>> circuit = DSPCircuit('acquire_neurophysiology.rcx', 'RZ5')
 
-Required parameters
--------------------
-circuit_name : path
+Parameters
+----------
+circuit_name : path (required)
     Absolute or relative path pointing to the file containing the circuit
     microcde (e.g. the \*.rcx file).  
-device_name : str
+device_name : str (required)
     Target device to load the microcode to (the name will be in the format RP2,
     RX6, RX8, RZ5, RZ6, etc.).  
-device_id : int
+device_id : int (optional, default=1)
     Specifies which of the two devices to load the microcode to.  Required only
     if you have more than one of the same device (e.g. two RP2 processors).  Use
     TDT's zBUSmon utility to look up the correct device ID.
-load : boolean
+load : boolean (optional, default=True)
     Load the circuit to the device when class is initialized?  True by default.
     Typically you would set it to False when you want to inspect the DSP
     microcode without actually running it.
@@ -48,10 +48,33 @@ scalar_tags : list
 vector_tags : list
     List of tag tag names (i.e. variables) present in the DSP microcode that
     have a tag size >= 1 (i.e. buffer or coefficient tag).
-circuit_name : str
+name : str
     Name of circuit currently loaded
-circuit_path : str
+path : str
     Full path of circuit on disk
+
+Brief example of the public attributes available for the example circuit,
+record_microphone.rcx shown in the introduction::
+
+    >>> print circuit.fs
+    97656.25
+    >>> print circuit.scalar_tags
+    ['mic_i', 'speaker_i', 'play_dur_n', 'record_del_n', 'record_dur_n', 'recording', 'playing', 'running']
+    >>> print circuit.vector_tags
+    ['speaker', 'mic']
+    >>> print circuit.name
+    example_circuit.rcx
+    >>> print circuit.tags
+    {'mic': (100000, 68),
+     'mic_i': (1, 73),
+     'play_dur_n': (1, 73),
+     'playing': (1, 76),
+     'record_del_n': (1, 73),
+     'record_dur_n': (1, 73),
+     'recording': (1, 76),
+     'running': (1, 76),
+     'speaker': (100000, 68),
+     'speaker_i': (1, 73)}
 
 Error handling
 --------------
@@ -116,4 +139,9 @@ trigger A using the following circuit construct.
 
 .. image:: zBUS_trigger.*
 
-TODO: finish this section
+API documentation
+-----------------
+
+.. autoclass:: tdt.DSPCircuit
+    :members:
+    :inherited-members:
