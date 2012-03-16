@@ -226,7 +226,7 @@ reads data from a buffer::
         circuit.cset_tag('record_dur_n', 500, 'ms', 'n')
 
         # Compute and upload the waveform
-        t = arange(0, int(1*circuit.fs))/circuit.fs
+        t = arange(0, 1, circuit.fs**-1)
         waveform = sin(2*pi*1e3*t)
         speaker_buffer = circuit.get_buffer('speaker', 'w')
         speaker_buffer.write(waveform)
