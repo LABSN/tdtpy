@@ -2,11 +2,8 @@ import os
 import numpy as np
 import ctypes
 
-try:
-    import actxobjects
-    import pywintypes
-except:
-    pass
+import actxobjects
+import pywintypes
 
 from .dsp_error import DSPError
 from . import dsp_server

@@ -301,8 +301,8 @@ class DSPCircuit(object):
         Fire a zBUS or software trigger
 
         Parameters
-        ==========
-        trigger : int or 'A' or 'B'
+        ----------
+        trigger : {1-9, 'A', 'B'}
             Fire the specified trigger.  If integer, this corresponds to
             RPco.X.SoftTrg.  If 'A' or 'B', this fires the corresponding zBUS
             trigger.

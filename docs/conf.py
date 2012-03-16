@@ -15,14 +15,31 @@ import sys, os
 
 # Mock out the modules so that sphinx autodoc can run without requiring these
 # platform dependencies
-class Mock(object):
-    def __init__(self, *args):
-        pass
-    def __getattr__(self, name):
-        return Mock
+MOCK_MODULES = ('numpy', 'tdt.actxobjects', 'pywintypes')
 
-for mod_name in ('numpy', 'win32com', 'tdt.actxobjects'):
-    sys.modules[mod_name] = Mock()
+class Mock(object):
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __call__(self, *args, **kwargs):
+        return Mock()
+
+    @classmethod
+    def __getattr__(self, name):
+        if name in ('__file__', '__path__'):
+            return '/dev/null'
+        elif name[0] == name[0].upper():
+            return type(name, (), {})
+        else:
+            return Mock()
+
+for mock in  MOCK_MODULES:
+    sys.modules[mock] = Mock()
+
+if os.environ.get('READTHEDOCS', None) == 'True':
+    html_theme = 'default'
+else:
+    html_theme = 'nature'
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -34,7 +51,7 @@ sys.path.insert(0, os.path.abspath('..'))
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.intersphinx',]
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.intersphinx', 'numpydoc']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -100,10 +117,6 @@ pygments_style = 'sphinx'
 
 
 # -- Options for HTML output ---------------------------------------------------
-
-# The theme to use for HTML and HTML Help pages.  Major themes that come with
-# Sphinx are currently 'default' and 'sphinxdoc'.
-html_theme = 'default'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the

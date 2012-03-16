@@ -7,6 +7,10 @@ import logging
 log = logging.getLogger(__name__)
 
 class DSPProject(object):
+    '''
+    Used to manage loading circuits to multiple DSPs.  Mainly a convenience
+    method.
+    '''
 
     def __init__(self, address=None, interface='GB'):
         self._circuit_info = {}
@@ -17,6 +21,9 @@ class DSPProject(object):
         atexit.register(self.stop)
 
     def load_circuit(self, circuit_name, device_name):
+        '''
+        Load the circuit to the specified device
+        '''
         self._circuit_info[(circuit_name, device_name)] = []
         # We need to store a reference to the circuit here so we can properly
         # initialize any buffers we need
@@ -26,14 +33,35 @@ class DSPProject(object):
         return circuit
 
     def start(self):
+        '''
+        Start all circuits that have been loaded
+        '''
         for circuit in self._circuits.values():
             circuit.start()
 
     def stop(self):
+        '''
+        Stop all circuits that have been loaded
+        '''
         for circuit in self._circuits.values():
             circuit.stop()
 
     def trigger(self, trigger, mode='pulse'):
+        '''
+        Fire a zBUS trigger
+
+        Parameters
+        ----------
+        trigger : {'A', 'B'}
+            Fire the specified trigger.  If integer, this corresponds to
+            RPco.X.SoftTrg.  If 'A' or 'B', this fires the corresponding zBUS
+            trigger.
+        mode : {'pulse', 'high', 'low'}
+            Indicates the corresponding mode to set the zBUS trigger to
+
+        Note that due to a bug in the TDT ActiveX library for versions greater
+        than 56, we have no way of ensuring that zBUS trigger A or B were fired.
+        '''
         # Convert mode string to the corresponding integer
         mode_enum = dict(pulse=0, high=1, low=2)
         # We have no way of ensuring that zBUS trigger A or B were fired
