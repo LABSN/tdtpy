@@ -43,8 +43,7 @@ class DSPCircuit(object):
     def __init__(self, circuit_name, device_name, interface='GB', device_id=1,
             load=True, start=False, fs=None, address=None):
         self.device_name = device_name
-        self.circuit_name = split(circuit_name)[1]
-        #self.circuit_path = abspath(circuit_name)
+        self.name = split(circuit_name)[1]
         self.device_id = device_id
         self.server_address = address
         self.interface= interface
@@ -55,7 +54,7 @@ class DSPCircuit(object):
         self._iface = connect_rpcox(device_name, interface=interface,
                 device_id=device_id, address=address)
         self._zbus  = connect_zbus(interface=interface, address=address)
-        self.circuit_path = get_cof_path(abspath(circuit_name))
+        self.path = get_cof_path(abspath(circuit_name))
         if load:
             self.load()
             atexit.register(self.stop)
@@ -88,8 +87,8 @@ class DSPCircuit(object):
         self.read()
 
     def read(self):
-        if not self._iface.ReadCOF(self.circuit_path):
-            mesg = "Unable to read %s" % self.circuit_path
+        if not self._iface.ReadCOF(self.path):
+            mesg = "Unable to read %s" % self.path
             raise DSPError(self, mesg)
 
     def load(self):
@@ -104,8 +103,8 @@ class DSPCircuit(object):
         if not self._iface.ClearCOF():
             mesg = "Unable to clear %s buffers" % self
             raise DSPError(self, mesg)
-        if not self._iface.LoadCOF(self.circuit_path):
-            mesg = 'Unable to load %s' % self.circuit_path
+        if not self._iface.LoadCOF(self.path):
+            mesg = 'Unable to load %s' % self.path
             raise DSPError(self, mesg)
         log.debug("Reloaded %s", self)
         self.trigger('A', 'low')
@@ -366,7 +365,7 @@ class DSPCircuit(object):
             state += 'Ld'
         if self.is_running():
             state += 'Rn'
-        return "{}:{}:{}".format(self.device_name, self.circuit_name, state)
+        return "{}:{}:{}".format(self.device_name, self.name, state)
 
     def set_sort_windows(self, name, windows):    
         '''
