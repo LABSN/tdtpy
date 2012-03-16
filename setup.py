@@ -9,6 +9,6 @@ setup(
     url='http://bradburan.com/programs/tdtpy',
     license='LICENSE.txt',
     description='Module for communicating with TDT\'s System 3 hardware',
-    requires=['win32com'],
+    requires=['win32com', 'numpydoc'],
     package_data={'tdt': ['components/*.rcx']}
 )

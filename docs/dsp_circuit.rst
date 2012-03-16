@@ -1,5 +1,5 @@
 :class:`tdt.DSPCircuit` -- Wrapper for RPvds circuit objects
-===========================================================
+============================================================
 
 Wrapper around a RPvds circuit.
 
@@ -141,7 +141,3 @@ trigger A using the following circuit construct.
 
 API documentation
 -----------------
-
-.. autoclass:: tdt.DSPCircuit
-    :members:
-    :inherited-members:
