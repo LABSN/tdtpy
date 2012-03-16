@@ -1,13 +1,15 @@
 from cStringIO import StringIO
 from tempfile import NamedTemporaryFile
 import uuid
-from . import actxobjects
 import socket, struct
 from select import select
 import cPickle as pickle
 import numpy as np
 import logging
 import os
+
+# Required so that sphinx can build this on readthedocs.org
+import actxobjects
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)

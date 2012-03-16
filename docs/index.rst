@@ -58,7 +58,7 @@ library:
 * Simple reads and writes.  The hardware buffers are implemented as "ring
   buffers" with various features such as multichannel storage and data
   compression.  TDTPy automatically detects the configuration of the hardware
-  buffer and returns a buffer object (`tdt.DSPBuffer`) that you can read/write
+  buffer and returns a buffer object (`DSPBuffer`) that you can read/write
   to without having to deal with the intricacies of the hardware buffer itself.
 * Robust error handling.  Some methods in the ActiveX library will fail silently
   (e.g. if you try to access a nonexistent tag or attempt to write more data
@@ -199,16 +199,17 @@ Code example
     required to follow the example below.  See the `RPvds manual`_ for more
     information.
 
-The following examples are based on the following RPvds circuit.  If you wish to
-test the circuit you may need to adapt it for your specific device (e.g. on the
-RX6 the correct input channel for the microphone would be 128 and on the RZ6 you
-would use the AudioIn and AudioOut macros).  The specifics for each device are
-described in TDT's `System 3 manual`_.
+The following examples are based on this RPvds circuit (:download:`download
+circuit <record_microphone.rcx>`).  If you wish to test the circuit you may need
+to adapt it for your specific device (e.g. on the RX6 the correct input channel
+for the microphone would be 128 and on the RZ6 you would use the AudioIn and
+AudioOut macros).  The specifics for each device are described in TDT's `System
+3 manual`_.
 
 .. _RPvds manual: http://www.tdt.com/T2Download/manuals/RPvdsEx_Manual.pdf 
 .. _System 3 manual: http://www.tdt.com/T2Download/manuals/TDTSys3_Manual.pdf 
 
-.. image:: example_circuit.*
+.. image:: record_microphone.*
 
 Let's start with a simple code example, using TDTPy, that loads a circuit and
 reads data from a buffer::
@@ -329,22 +330,21 @@ milliseconds).  Both ``mic`` and ``speaker`` have two supporting tags,
 ``speaker_i`` and ``mic_i``, respectively, that are used by TDTPy to determine
 how much data is currently in the buffer.
 
-The circuit is configured to deliver the data stored in the
-speaker buffer to DAC channel 1 (which is connected to a speaker) and record the
-resulting microphone waveform.  The entire process is controlled by a software
-trigger.
+The circuit is configured to deliver the data stored in the speaker buffer to
+DAC channel 1 (which is connected to a speaker) and record the resulting
+microphone waveform.  The entire process is controlled by a software trigger.
 
 We want to configure the microphone to record for a duration of 500 ms with a 25
 ms delay.  Remember that ``record_del_n`` and ``record_dur_n`` both require the
 number of samples.  Since number of samples depends on the sampling frequency of
 the DSP, we have to convert our value, which is in millseconds, to the
-appropriate unit::
+appropriate unit using :func:`DSPCircuit.set_tag`::
 
     circuit.set_tag('record_del_n', int(25e-3*circuit.fs))
     circuit.set_tag('record_dur_n', int(500e-3*circuit.fs))
 
-Alternatively, we can use a convenience method that handles the unit conversion
-for us (n is number of samples)::
+Alternatively, we can use a convenience method, :func:`DSPCircuit.cset_tag`,
+that handles the unit conversion for us (n is number of samples)::
 
     circuit.cset_tag('record_del_n', 25, src_unit='ms', dest_unit='n')
     circuit.cset_tag('record_dur_n', 500, src_unit='ms', dest_unit='n')
@@ -361,8 +361,8 @@ readable.
 
 To write a 1 second, 1 kHz tone to the speaker buffer, we first generate the
 waveform using the sampling frequency of the circuit.  The sampling frequency is
-available as an attribute, `fs` of the DSPCircuit class.  A method,
-:func:DSPCircuit.convert` facilitates unit conversions that are based on the
+available as an attribute, `fs` of the :class:`DSPCircuit` class.  A method,
+:func:`DSPCircuit.convert` facilitates unit conversions that are based on the
 sampling frequency of the circuit (e.g. :math:`duration*fs` will convert
 duration, in seconds, to the number of sample required for the waveform)::
 
@@ -378,8 +378,9 @@ indicates whether the buffer should be opened for reading (r) or writing (w)::
     speaker_buffer.write(waveform)
 
 Now that you've configured the circuit, you are ready to run it and record the
-resulting waveform.  The acquire method will block until the ``running`` tag
-becomes False then return the contents of the microphone buffer::
+resulting waveform.  The :func:`DSPBuffer.acquire` method will block until the
+``running`` tag becomes False then return the contents of the microphone
+buffer::
 
     microphone_buffer = circuit.get_buffer('microphone', 'r')
     data = microphone_buffer.acquire(1, 'running', False)
@@ -388,7 +389,7 @@ Accessing the raw ActiveX object
 --------------------------------
 Although DSPCircuit and DSPBuffer expose most of the functionality available via
 the ActiveX object, there may be times when you need to access it directly.  You
-may obtain a handle to the object via the function `tdt.util.connect_rpcox`::
+may obtain a handle to the object via :func:`tdt.util.connect_rpcox`::
 
     from tdt.util import connect_rpcox
     obj = connect_rpcox('RZ6', 'GB')
@@ -429,9 +430,9 @@ driver.  Requests from clients are essentially passed directly to the ActiveX
 interface itself.  To facilitate using this code we've created a network-aware
 proxy of the RPcoX client that passes off all RPcoX method calls directly to the
 RPC server.  This allows you to use the server in your code without having to
-rewrite your code to use `tdt.DSPProject` or `tdt.DSPCircuit`.  Assuming your
-code uses `win32com.client` directly rather than using TDTPy's abstraction
-layer, the following code::
+rewrite your code to use :class:`DSPProject` or :class:`DSPCircuit`.
+Assuming your code uses `win32com.client` directly rather than using TDTPy's
+abstraction layer, the following code::
 
     from win32com.client import Dispatch
     iface = Dispatch('RPco.X')
@@ -447,10 +448,11 @@ can simply be converted to a network-aware version via::
     zbus = zBUSNET(address=(host, port))
 
 Even if you prefer not to use the TDTPy abstraction layer (e.g.
-`tdt.DSPProject`, `tdt.DSPCircuit` and `tdt.DSPBuffer`), I highly recommend
-using TDTPy to obtain a handle to the ActiveX drivers since we have
-monkeypatched the win32com connection to speed up certain calls to the ActiveX
-drivers.  To obtain a handle to the standard ActiveX drivers using TDTPy::
+:class:`DSPProject`, :class:`DSPCircuit` and :class:`DSPBuffer`), I
+highly recommend using TDTPy to obtain a handle to the ActiveX drivers since we
+have monkeypatched the win32com connection to speed up certain calls to the
+ActiveX drivers.  To obtain a handle to the standard ActiveX drivers using
+TDTPy::
 
     from tdt.util import connect_rpcox, connect_zbus
     iface = connect_rpcox('RZ6')

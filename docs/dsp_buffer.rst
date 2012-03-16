@@ -25,7 +25,7 @@ circuit, you can simply initialize the class by passing only the name of the
 data tag (`spikes`) and it will automatically use `spikes_i` and `spikes_n` as
 the index and size tags, respectively.
 
->>> buffer = circuit.open_buffer('spikes', 'r')
+>>> buffer = circuit.get_buffer('spikes', 'r')
 
 If a required tag cannot be found (either by explicitly defining the tag name or
 automatically by adding the default extension to the data tag name), an error is
@@ -68,6 +68,13 @@ sampling rate of the DSP::
 
     Currently TDTPy does not support changing sampling rate on-the-fly (you can
     do it, but you need to reload the buffer).
+
+Writing single channel data
+---------------------------
+TODO
+
+TDTPy has not been tested with writing multi-channel data (mainly because we
+currently do not have a use-case for it). 
 
 Reading single and multichannel data
 ------------------------------------

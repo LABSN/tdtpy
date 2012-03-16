@@ -270,6 +270,11 @@ class DSPBuffer(AbstractRingBuffer):
         '''
         Fire trigger and acquire resulting block of data
 
+        Data will be continuously spooled while the status of the handshake_tag
+        is being monitored, so a single acquisition block can be larger than the
+        size of the buffer; however, be sure to set poll_interval to a duration
+        that is sufficient to to download data before it is overwritten.
+
         Parameters
         ----------
         trigger
@@ -298,18 +303,13 @@ class DSPBuffer(AbstractRingBuffer):
 
         Returns
         -------
-        3D array with dimensions corresponding to trial, channel and sample
-
-        Data will be continuously spooled while the status of the handshake_tag
-        is being monitored, so a single acquisition block can be larger than the
-        size of the buffer.
+        acquired_trials : ndarray
+            A 3-dimensional array in the format (trial, channel, sample). 
 
         Examples
         --------
-        TODO: flesh this out a bit more
         >>> buffer.acquire(1, 'sweep_done')
         >>> buffer.acquire(1, 'sweep_done', True)
-
         '''
         # TODO: should we set the read index to = write index?
 
