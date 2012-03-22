@@ -11,6 +11,25 @@ from . import dsp_server
 import logging
 log = logging.getLogger(__name__)
 
+def connect_pa5(interface='GB', device_id=1, address=None):
+    '''
+    Connect to the PA5
+    '''
+    debug_string = '%d via %s interface' % (device_id, interface)
+    log.debug(debug_string)
+    try:
+        if address is None:
+            driver = actxobjects.PA5x()
+        else:
+            driver = dsp_server.PA5NET(address)
+        if not driver.ConnectPA5(interface,device_id):
+            raise DSPError("PA5", "Connection failed")
+        log.debug("Connected to PA5")
+
+        return driver
+    except pywintypes.com_error:
+        raise ImportError, 'ActiveX drivers from TDT not installed'
+
 def connect_zbus(interface='GB', address=None):
     '''
     Connect to the zBUS interface and set zBUS triggers to low
