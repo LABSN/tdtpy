@@ -263,6 +263,19 @@ class _NET(object):
     def __getattr__(self, name):
         return _Method(name, self._send)
 
+class PA5NET(_NET):
+    '''
+    Remote procedure call client used in conjunction with the TDTRPCSever
+
+    This is essentially a network-aware version of the PA5x object that is
+    designed to be a drop-in replacement (i.e. it supports all the methods and
+    attributes of the native PA5x object).  Must be used in conjunction with
+    TDTRPCServer.  TDTRPCServer handles concurrency issues, allowing multiple
+    threads, processes and computers to connect to the hardware simultaneously.
+    '''
+
+    driver = 'PA5x'
+
 class zBUSNET(_NET):
     '''
     Remote procedure call client used in conjunction with the TDTRPCSever
