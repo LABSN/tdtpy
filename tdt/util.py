@@ -32,7 +32,7 @@ def connect_zbus(interface='GB', address=None):
         log.debug("Set zBusTrigB to low")
         return driver
     except pywintypes.com_error:
-        raise ImportError, 'ActiveX drivers not installed'
+        raise ImportError, 'ActiveX drivers from TDT are not installed'
 
 def connect_rpcox(name, interface='GB', device_id=1, address=None):
     '''
