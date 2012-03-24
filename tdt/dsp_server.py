@@ -110,29 +110,6 @@ class TDTRPCServer(object):
         args
             Tuple of arguments that will be unpacked when calling the method on
             the ActiveX object
-
-    Examples
-    --------
-
-    >>> client = TDTClient('localhost', 13131)
-    >>> client.send('RZ5', 'ConnectRZ5', ('GB', 1))
-    >>> print client.recv()
-    >>> client.send('RZ5', 'LoadCOF', cof_path)
-
-    Alternatively, if you want to refer to the RZ5 as the acquisition device:
-
-    >>> client = TDTClient('localhost', 13131)
-    >>> client.send('acq', 'ConnectRZ5', ('GB', 1))
-    >>> print client.recv()
-    >>> client.send('acq', 'LoadCOF', cof_path)
-
-    To use these classes as a duck-typed proxy for the RPcoX object, use
-    :class:`TDTDeviceClient`.
-
-    >>> RZ5_client = TDTDeviceClient('localhost', 13131)
-    >>> RZ5_client.ConnectRZ5('GB', 1)
-
-    All subsequent methods on this client will go directly to the RZ5. 
     '''
 
     def __init__(self, address, connections=2, interface='GB'):
@@ -354,6 +331,6 @@ if __name__ == '__main__':
             setattr(args, self.dest, (host, int(port)))
 
     parser = argparse.ArgumentParser(description='Run TDT System 3 RPC server')
-    parser.add_argument('address', action=ParseAddress, default=('', 13131))
+    parser.add_argument('address', action=ParseAddress, default=('', 3333))
     args = parser.parse_args()
     TDTRPCServer(address=args.address).run_forever()
