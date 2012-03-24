@@ -1,3 +1,8 @@
+'''
+.. module:: tdt.dsp_buffer
+    :synopsis: Module for handling I/O with the buffers on the DSP devices
+.. moduleauthor:: Brad Buran <bburan@alum.mit.edu
+'''
 import time
 import numpy as np
 
