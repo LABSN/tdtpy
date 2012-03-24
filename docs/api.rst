@@ -1,6 +1,10 @@
 API documentation
 =================
 
+tdt.util
+--------
+.. automodule:: tdt.util
+
 tdt.DSPProject
 --------------
 .. autoclass:: tdt.DSPProject

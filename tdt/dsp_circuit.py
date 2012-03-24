@@ -392,6 +392,60 @@ class DSPCircuit(object):
         self.set_coefficients(name, coefficients.ravel())
 
     def convert(self, value, src_unit, dest_unit):
+        '''
+        Converts value to desired unit give the sampling frequency of the DSP.
+
+        Parameters specified in paradigms are typically expressed as frequency
+        and time while many DSP parameters are expressed in number of samples
+        (referenced to the DSP sampling frequency).  This function provides a
+        convenience method for converting between conventional values and the
+        'digital' values used by the DSP.
+
+        Note that for converting units of time/frequency to n/nPer, we have to
+        coerce the value to a multiple of the DSP period (e.g. the number of
+        'ticks' of the DSP clock).
+
+        Appropriate strings for the unit types:
+
+            fs
+                sampling frequency
+            nPer
+                number of samples per period
+            n
+                number of samples
+            s
+                seconds
+            ms
+                milliseconds
+            nPow2
+                number of samples, coerced to the next greater power of 2 (used for
+                ensuring efficient FFT computation)
+
+        Given a DSP clock frequency of 10 kHz::
+
+            >>> circuit.convert(0.5, 's', 'n')
+            5000
+            >>> circuit.convert(500, 'fs', 'nPer')
+            20
+
+        Given a DSP clock frequency of 97.5 kHz::
+
+            >>> circuit.convert(5, 's', 'nPow2')
+            524288
+
+        Parameters
+        ----------
+        value: numerical (e.g. integer or float)
+            Value to be converted
+        src_unit: string
+            Unit of the value
+        dest_unit: string
+            Destination unit
+
+        Returns
+        -------
+        converted unit : numerical value
+        '''
         return convert(src_unit, dest_unit, value, self.fs)
 
     def print_tag_info(self):

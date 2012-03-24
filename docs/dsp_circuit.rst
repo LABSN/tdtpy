@@ -1,7 +1,7 @@
 :class:`tdt.DSPCircuit` -- Wrapper for RPvds circuit objects
 ============================================================
 
-Wrapper around a RPvds circuit.
+Wrapper around a RPvds circuit
 
 >>> from tdt import DSPCircuit
 >>> circuit = DSPCircuit('acquire_neurophysiology.rcx', 'RZ5')
@@ -59,7 +59,8 @@ record_microphone.rcx shown in the introduction::
     >>> print circuit.fs
     97656.25
     >>> print circuit.scalar_tags
-    ['mic_i', 'speaker_i', 'play_dur_n', 'record_del_n', 'record_dur_n', 'recording', 'playing', 'running']
+    ['mic_i', 'speaker_i', 'play_dur_n', 'record_del_n', 
+     'record_dur_n', 'recording', 'playing', 'running']
     >>> print circuit.vector_tags
     ['speaker', 'mic']
     >>> print circuit.name
@@ -84,6 +85,12 @@ Attempting to get/set the value of a nonexistent tag in the circuit will raise a
 
 >>> circuit.get_tag('nonexistent_tag')
 DSPError: 'nonexistent_tag' not found in circuit
+
+.. note:: 
+
+    If you have a tag linked to a `static` datatype the DSPCircuit class will
+    raise an exception.  Since the ActiveX driver cannot read from (or write to)
+    this tag, this typically indicates a design error in the RPvds circuit.
 
 Suggested code conventions
 --------------------------
@@ -138,6 +145,3 @@ In many cases it's a good idea to put most of the circuit under control of zBUS
 trigger A using the following circuit construct.  
 
 .. image:: zBUS_trigger.*
-
-API documentation
------------------
