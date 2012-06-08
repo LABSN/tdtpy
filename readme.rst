@@ -31,7 +31,7 @@ library:
   is attempted, a DSPError is raised with the appropriate message.
 
 Work on TDTPy was supported by grant DC009237 from the `National Institute on
-Deafness and other Communication Disorders`.
+Deafness and other Communication Disorders`_.
 
 .. _Tucker-Davis Technologies: http://www.tdt.com
 .. _System 3: http://www.tdt.com/products.htm 
