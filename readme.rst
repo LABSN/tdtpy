@@ -30,7 +30,10 @@ library:
   metadata before being passed to the ActiveX library.  If an invalid operation
   is attempted, a DSPError is raised with the appropriate message.
 
+Work on TDTPy was supported by grant DC009237 from the `National Institute on
+Deafness and other Communication Disorders`.
+
 .. _Tucker-Davis Technologies: http://www.tdt.com
 .. _System 3: http://www.tdt.com/products.htm 
 .. _ActiveX library: http://www.tdt.com/T2Download/manuals/ActiveX_User_Reference.pdf
-
+.. _National Institute on Deafness and other Communication Disorders: http://www.nidcd.nih.gov
