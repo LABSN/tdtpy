@@ -1,6 +1,17 @@
 TDTPy Documentation
 ===================
 
+Python interface for TDT equipment
+----------------------------------
+
+:Author: **Brad Buran**
+:Copyright: |copy| 2010 to present - Brad N. Buran and Dan H. Sanes
+
+Work on TDTPy was supported by grant DC009237 from the `National Institute on
+Deafness and other Communication Disorders`_.
+
+.. _National Institute on Deafness and other Communication Disorders: http://www.nidcd.nih.gov
+
 .. module:: tdt
     :platform: Windows (requires proprietary ActiveX driver from TDT)
 .. moduleauthor:: Brad Buran <bburan@alum.mit.edu>
@@ -12,7 +23,8 @@ TDTPy Documentation
     and OSX).  The server, however, requires the proprietary ActiveX drivers
     provided by TDT which only run on Windows.
 
-Contents:
+Contents
+--------
 
 .. toctree::
     :maxdepth: 2
