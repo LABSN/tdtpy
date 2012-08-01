@@ -28,7 +28,7 @@ setup(
     version='0.7',
     author='Brad Buran',
     author_email='bburan@alum.mit.edu',
-    packages=['tdt', 'tdt.actxobjects', 'tdt.debuggers', 'tdt.device'],
+    packages=['tdt', 'tdt.actxobjects', 'tdt.device'],
     url='http://bradburan.com/programs/tdtpy',
     license='GPLv3',
     description='Module for communicating with TDT\'s System 3 hardware',
