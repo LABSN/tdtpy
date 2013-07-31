@@ -65,9 +65,9 @@ would be much more verbose::
 
         # Configure the data tags
         fs = RX6.GetSFreq()
-        if circuit.SetTagVal('record_del_n', int(25e-3*fs)) == 0:
+        if RX6.SetTagVal('record_del_n', int(25e-3*fs)) == 0:
             raise SystemError, "Cannot set tag"
-        if circuit.SetTagVal('record_dur_n', int(500e-3*fs)) == 0:
+        if RX6.SetTagVal('record_dur_n', int(500e-3*fs)) == 0:
             raise SystemError, "Cannot set tag"
         if RX6.Start() == 0:
             raise SystemError, "Cannot start circuit"
