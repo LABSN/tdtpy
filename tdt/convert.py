@@ -9,6 +9,7 @@ def ispow2(n):
     '''
     return (n & (n-1)) == 0
 
+
 def nextpow2(n):
     '''
     Given n, return the nearest power of two that is >= n
@@ -24,12 +25,13 @@ def nextpow2(n):
     '''
     if ispow2(n):
         return n
-    
+
     count = 0
     while n != 0:
         n = n >> 1
         count += 1
     return 1 << count
+
 
 class SamplingRateError(ValueError):
     '''
@@ -46,6 +48,7 @@ class SamplingRateError(ValueError):
                'the DSP clock frequency of %f Hz.'
         return mesg % (self.requested_fs, self.fs)
 
+
 def convert(src_unit, dest_unit, value, dsp_fs):
     '''
     Converts value to desired unit give the sampling frequency of the DSP.
@@ -57,8 +60,8 @@ def convert(src_unit, dest_unit, value, dsp_fs):
     'digital' values used by the DSP.
 
     Note that for converting units of time/frequency to n/nPer, we have to
-    coerce the value to a multiple of the DSP period (e.g. the number of 'ticks'
-    of the DSP clock).
+    coerce the value to a multiple of the DSP period (e.g. the number of
+    'ticks' of the DSP clock).
 
     Appropriate strings for the unit types:
 
@@ -95,18 +98,17 @@ def convert(src_unit, dest_unit, value, dsp_fs):
     -------
     converted unit : numerical value
     '''
-    
     def fs_to_nPer(req_fs, dsp_fs):
         if dsp_fs < req_fs:
             raise SamplingRateError(dsp_fs, req_fs)
         return int(dsp_fs/req_fs)
-    
+
     def nPer_to_fs(nPer, dsp_fs):
         return dsp_fs/nPer
-    
+
     def n_to_s(n, dsp_fs):
         return n/dsp_fs
-    
+
     def s_to_n(s, dsp_fs):
         return int(s*dsp_fs)
 
@@ -115,13 +117,9 @@ def convert(src_unit, dest_unit, value, dsp_fs):
 
     def n_to_ms(n, dsp_fs):
         return n/dsp_fs*1e3
-   
+
     def s_to_nPow2(s, dsp_fs):
         return nextpow2(s_to_n(s, dsp_fs))
 
     fun = '%s_to_%s' % (src_unit, dest_unit)
     return locals()[fun](value, dsp_fs)
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod()

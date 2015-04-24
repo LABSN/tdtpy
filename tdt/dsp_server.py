@@ -1,7 +1,8 @@
 from cStringIO import StringIO
 from tempfile import NamedTemporaryFile
 import uuid
-import socket, struct
+import socket
+import struct
 from select import select
 import cPickle as pickle
 import numpy as np
@@ -19,22 +20,25 @@ TYPE_NUMPY_DATA = 0
 TYPE_PICKLE_DATA = 1
 
 # Result codes
-SUCCESS             = 2**0
-DEV_NOT_CONNECTED   = 2**1
-DEV_CONNECTED       = 2**2
-TAG_MISSING         = 2**3
+SUCCESS = 2**0
+DEV_NOT_CONNECTED = 2**1
+DEV_CONNECTED = 2**2
+TAG_MISSING = 2**3
+
 
 def _write_preamble(sock, mid, nbytes, protocol=0):
     preamble = struct.pack('!IIH', mid, nbytes, protocol)
     sock.sendall(preamble)
 
+
 def _read_preamble(sock):
     mid, nbytes, protocol = struct.unpack('!IIH', sock.recv(10))
+
 
 def _read(sock):
     preamble = sock.recv(10)
     if preamble == '':
-        raise socket.error, 'transmission terminated'
+        raise socket.error('transmission terminated')
     mid, size, protocol = struct.unpack('!IIH', preamble)
     log.debug('reading message id %d with %d bytes', mid, size)
     sock.settimeout(10)
@@ -49,6 +53,7 @@ def _read(sock):
         if message.tell() == size:
             break
     return mid, protocol, message.getvalue()
+
 
 def write(sock, mid, data):
     '''
@@ -67,6 +72,7 @@ def write(sock, mid, data):
         _write_preamble(sock, mid, len(message), TYPE_PICKLE_DATA)
         sock.sendall(message)
 
+
 def read(sock):
     mid, protocol, message = _read(sock)
     if protocol == TYPE_NUMPY_DATA:
@@ -74,6 +80,7 @@ def read(sock):
     elif protocol == TYPE_PICKLE_DATA:
         data = pickle.loads(message)
     return mid, data
+
 
 class TDTRPCServer(object):
     '''
@@ -98,10 +105,10 @@ class TDTRPCServer(object):
         device_name
             The name that you used when creating the initial connection attempt
             (e.g. the call to ConnectRZ5, Connect RX8, etc.).  Following the
-            initial connection attempt, you will use that name to indicate which
-            device is the target of subsequent commands.  Typically this name
-            will be the device ID (e.g. 'RP2', 'RX8', 'RZ6', etc.), but you can
-            certainly assign IDs such 'stim' and 'acq'.
+            initial connection attempt, you will use that name to indicate
+            which device is the target of subsequent commands.  Typically this
+            name will be the device ID (e.g. 'RP2', 'RX8', 'RZ6', etc.), but
+            you can certainly assign IDs such 'stim' and 'acq'.
 
         method_name
             The name of the command to call on the ActiveX object associated
@@ -114,7 +121,7 @@ class TDTRPCServer(object):
 
     def __init__(self, address, connections=2, interface='GB'):
         self._connections = 2
-        self._server = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+        self._server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._server.bind(address)
         self._server.listen(connections)
         self._socks = [self._server]
@@ -129,8 +136,8 @@ class TDTRPCServer(object):
         self._interface = interface
         self._zbus = actxobjects.ZBUSx()
         self._zbus.ConnectZBUS(interface)
-        #self._rpcox = actxobjects.RPcoX()
-        #self._PA5 = actxobjects.PA5x()
+        # self._rpcox = actxobjects.RPcoX()
+        # self._PA5 = actxobjects.PA5x()
 
     def run_forever(self, poll_interval=0.5):
         socks = self._socks
@@ -147,12 +154,12 @@ class TDTRPCServer(object):
                     self.handle_accept()
                 else:
                     # This is probably a remote procedure call request from one
-                    # of the clients.  Let's attempt to process the request.  If
+                    # of the clients.  Let's attempt to process the request  If
                     # an error is raised during the attempt, this most likely
                     # means the socket disconnected.
                     try:
                         self.handle_read(sock)
-                    except socket.error, e:
+                    except socket.error:
                         self.handle_disconnect(sock)
 
     def handle_disconnect(self, sock):
@@ -199,6 +206,7 @@ class TDTRPCServer(object):
             result = getattr(self._iface[uuid], command)(*args)
         write(sock, mid, result)
 
+
 class _Method(object):
     '''
     Bind a RPC method to a RPC server
@@ -211,10 +219,11 @@ class _Method(object):
     def __call__(self, *args):
         return self._send(self._name, *args)
 
-class _NET(object): 
+
+class _NET(object):
 
     def __init__(self, address=('localhost', 13131)):
-        cn = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+        cn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         cn.connect(address)
         self._cn = cn
         self._mid = -1
@@ -240,6 +249,7 @@ class _NET(object):
     def __getattr__(self, name):
         return _Method(name, self._send)
 
+
 class PA5NET(_NET):
     '''
     Remote procedure call client used in conjunction with the TDTRPCSever
@@ -253,6 +263,7 @@ class PA5NET(_NET):
 
     driver = 'PA5x'
 
+
 class zBUSNET(_NET):
     '''
     Remote procedure call client used in conjunction with the TDTRPCSever
@@ -265,6 +276,7 @@ class zBUSNET(_NET):
     '''
 
     driver = 'ZBUSx'
+
 
 class RPcoXNET(_NET):
     '''
@@ -298,28 +310,30 @@ class RPcoXNET(_NET):
         with open(filename, 'rb') as fh:
             return self._send('LoadCOFsf', fh.read(), sf)
 
+
 def test_client():
     from dsp_project import DSPProject
     project = DSPProject(address=('localhost', 13131))
-    filename = 'e:/programs/development/src/neurobehavior/components/positive-behavior-v2.rcx'
-    circuit = project.load_circuit(filename, 'RZ6')
-    #print circuit.tags
-    #circuit.start()
-    #time
+    filename = ('e:/programs/development/src/neurobehavior/'
+                'components/positive-behavior-v2.rcx')
+    circuit = project.load_circuit(filename, 'RZ6')  # noqa
+    # print circuit.tags
+    # circuit.start()
+    # time
 
-    #from util import connect_rpcox, connect_zbus
-    #zbus = connect_zbus(('localhost', 13131))
-    #iface = connect_rpcox('RZ6', 1, ('localhost', 13131))
-    #print iface.ConnectRZ6('GB', 1)
-    #print iface.LoadCOF(
-    #print iface.Run()
-    #print iface.GetTagVal('resp_dur_n')
-    #print iface.Halt()
-    #client = TDTClient()
-    #mid = client.execute('RZ6', 'ConnectRZ6', 'GB', 1)
-    #print client.get_result(mid)
-    #mid = client.execute('RZ6', 'SetTagVal', 'duration', 5)
-    #print client.get_result(mid)
+    # from util import connect_rpcox, connect_zbus
+    # zbus = connect_zbus(('localhost', 13131))
+    # iface = connect_rpcox('RZ6', 1, ('localhost', 13131))
+    # print iface.ConnectRZ6('GB', 1)
+    # print iface.LoadCOF(
+    # print iface.Run()
+    # print iface.GetTagVal('resp_dur_n')
+    # print iface.Halt()
+    # client = TDTClient()
+    # mid = client.execute('RZ6', 'ConnectRZ6', 'GB', 1)
+    # print client.get_result(mid)
+    # mid = client.execute('RZ6', 'SetTagVal', 'duration', 5)
+    # print client.get_result(mid)
 
 if __name__ == '__main__':
     import argparse

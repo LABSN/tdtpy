@@ -1,6 +1,7 @@
 import logging
 log = logging.getLogger(__name__)
 
+
 def wrap(length, offset, buffer_size):
     if (offset+length) > buffer_size:
         a_length = buffer_size-offset
@@ -8,6 +9,7 @@ def wrap(length, offset, buffer_size):
         return ((offset, a_length), (0, b_length))
     else:
         return ((offset, length), )
+
 
 def pending(old_idx, new_idx, buffer_size):
     '''
@@ -18,6 +20,7 @@ def pending(old_idx, new_idx, buffer_size):
         return buffer_size-old_idx+new_idx
     else:
         return new_idx-old_idx
+
 
 class AbstractRingBuffer(object):
     '''
@@ -43,13 +46,13 @@ class AbstractRingBuffer(object):
         * read_cycle
 
     '''
-    total_samples_written   = 0
-    total_samples_read      = 0
+    total_samples_written = 0
+    total_samples_read = 0
 
     # Note that read_index and write_index may be overriden as property
     # getter/setters in subclasses.
-    read_index              = 0
-    write_index             = 0
+    read_index = 0
+    write_index = 0
 
     def pending(self):
         '''
@@ -81,14 +84,14 @@ class AbstractRingBuffer(object):
         elif samples > self.pending():
             mesg = 'Attempt to read %r samples failed because only ' + \
                    '%r slots are available for read'
-            raise ValueError, mesg % (samples, self.pending())
+            raise ValueError(mesg % (samples, self.pending()))
 
         data = self._get_empty_array(samples)
         samples_read = 0
         for o, l in wrap(samples, self.read_index, self.size):
             data[..., samples_read:samples_read+l] = self._read(o, l)
             samples_read += l
-        self.read_index = (o+l) % self.size 
+        self.read_index = (o+l) % self.size
         self.total_samples_read += samples_read
         return data
 
@@ -100,14 +103,15 @@ class AbstractRingBuffer(object):
         elif not force and (samples > available):
             mesg = 'Attempt to write %d samples failed because only ' + \
                    '%d slots are available for write'
-            raise ValueError, mesg % (samples, available)
+            raise ValueError(mesg % (samples, available))
 
         samples_written = 0
         for o, l in wrap(samples, self.write_index, self.size):
-            if not self._write(o, data[..., samples_written:samples_written+l]):
-                raise SystemError, 'Problem with writing data to buffer'
+            if not self._write(o, data[...,
+                                       samples_written:samples_written+l]):
+                raise SystemError('Problem with writing data to buffer')
             samples_written += l
-        self.write_index = (o+l) % self.size 
+        self.write_index = (o+l) % self.size
         self.total_samples_written += samples_written
         return samples_written
 

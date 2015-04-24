@@ -1,4 +1,4 @@
-# -*- coding: mbcs -*-
+# -*- coding: utf-8 -*-
 # Created by makepy.py version 0.5.00
 # By python version 2.5.4 (r254:67916, Dec 23 2008, 15:10:54) [MSC v.1310 32 bit (Intel)]
 # From type library 'zBUSx.ocx'
