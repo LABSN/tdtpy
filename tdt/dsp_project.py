@@ -6,6 +6,7 @@ import atexit
 import logging
 log = logging.getLogger(__name__)
 
+
 class DSPProject(object):
     '''
     Used to manage loading circuits to multiple DSPs.  Mainly a convenience
@@ -15,7 +16,7 @@ class DSPProject(object):
     def __init__(self, address=None, interface='GB'):
         self._circuit_info = {}
         self._circuits = {}
-        self._zbus  = connect_zbus(interface=interface, address=address)
+        self._zbus = connect_zbus(interface=interface, address=address)
         self._interface = interface
         self.server_address = address
         atexit.register(self.stop)
@@ -28,7 +29,8 @@ class DSPProject(object):
         # We need to store a reference to the circuit here so we can properly
         # initialize any buffers we need
         circuit = DSPCircuit(circuit_name, device_name,
-                address=self.server_address, interface=self._interface)
+                             address=self.server_address,
+                             interface=self._interface)
         self._circuits[device_name] = circuit
         return circuit
 
@@ -60,7 +62,8 @@ class DSPProject(object):
             Indicates the corresponding mode to set the zBUS trigger to
 
         Note that due to a bug in the TDT ActiveX library for versions greater
-        than 56, we have no way of ensuring that zBUS trigger A or B were fired.
+        than 56, we have no way of ensuring that zBUS trigger A or B were
+        fired.
         '''
         # Convert mode string to the corresponding integer
         mode_enum = dict(pulse=0, high=1, low=2)

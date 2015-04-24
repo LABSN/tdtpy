@@ -1,12 +1,14 @@
+import numpy as np
+import time
 import logging
+import unittest
+
+from .dsp_circuit import DSPCircuit
+
 logging.basicConfig(level=logging.DEBUG)
 
-import unittest
-from .dsp_circuit import DSPCircuit
-import numpy as np 
-import time
 
-#class TestPickling(unittest.TestCase):
+# class TestPickling(unittest.TestCase):
 #
 #    def setUp(self):
 #        self.circuit_file = 'test_circuit.tmp'
@@ -28,6 +30,7 @@ import time
 #        remove(self.circuit_file)
 #        remove(self.buffer_file)
 #
+
 
 class TestBufferRead(unittest.TestCase):
 
@@ -60,7 +63,7 @@ class TestBufferRead(unittest.TestCase):
         if data.ndim > 1:
             self.assertSeqChannels(data, buffer.resolution)
 
-    #def test_overflow_warning(self):
+    # def test_overflow_warning(self):
     #    buffer = self.circuit.get_buffer('mc', src_type='float32', channels=4,
     #            block_size=1)
     #    self.circuit.set_tag('nHi_nodata', buffer.size+100)
@@ -72,7 +75,7 @@ class TestBufferRead(unittest.TestCase):
 
     def test_mc2(self):
         buffer = self.circuit.get_buffer('mc', 'r', src_type='float32',
-                channels=4, block_size=4)
+                                         channels=4, block_size=4)
         self.circuit.trigger(2)
         self.circuit.trigger(2)
         data = buffer.read()
@@ -83,54 +86,52 @@ class TestBufferRead(unittest.TestCase):
         self.assertSeqChannels(data, buffer.resolution)
         self.assertSeqSamples(data, buffer.resolution)
 
-    def test_mc(self): 
-        buffer = self.circuit.get_buffer('mc', 'r', src_type='float32', channels=4,
-                block_size=1)
+    def test_mc(self):
+        buffer = self.circuit.get_buffer('mc', 'r', src_type='float32',
+                                         channels=4, block_size=1)
         self.assertValid(buffer)
 
     def test_sh8(self):
         buffer = self.circuit.get_buffer('sh8', 'r', src_type='int8',
-                channels=4, block_size=4)
+                                         channels=4, block_size=4)
         self.assertEqual(self.circuit.get_tag('sh8_sf'), 31)
         self.assertValid(buffer)
 
     def test_sh16(self):
         buffer = self.circuit.get_buffer('sh16', 'r', src_type='int16',
-                channels=2, block_size=4)
+                                         channels=2, block_size=4)
         self.assertEqual(self.circuit.get_tag('sh16_sf'), 6553)
         self.shape = (2, 4)
         self.assertValid(buffer)
 
     def test_c16(self):
-        # If this fails, double check that scaling factor is set properly in the
-        # circuit since I am testing the ability to use a different tag for
+        # If this fails, double check that scaling factor is set properly in
+        # the circuit since I am testing the ability to use a different tag for
         # computing the scaling value
         buffer = self.circuit.get_buffer('c16', 'r', src_type='int16',
-                sf_tag='sh16_sf', block_size=4)
+                                         sf_tag='sh16_sf', block_size=4)
         self.shape = (1, 4)
         self.assertValid(buffer)
 
     def test_mcFI16(self):
         buffer = self.circuit.get_buffer('mcFI16', 'r', src_type='int16',
-                channels=8, block_size=4)
+                                         channels=8, block_size=4)
         self.shape = (8, 4)
         self.assertValid(buffer)
 
     def test_c8D(self):
         buffer = self.circuit.get_buffer('c8D', 'r', src_type='int8',
-                block_size=4)
+                                         block_size=4)
         self.shape = (1, 4)
         self.assertValid(buffer)
 
     # THIS KEEPS FAILING!
-    #def test_mcFI8(self):
-    #    buffer = self.circuit.get_buffer('mcFI8', src_type='int8', block_size=4,
-    #            channels=16)
+    # def test_mcFI8(self):
+    #    buffer = self.circuit.get_buffer('mcFI8', src_type='int8',
+    #                                     block_size=4, channels=16)
     #    self.shape = (16, 4)
     #    self.assertValid(buffer)
 
-    def tearDown(self):
-        self.circuit.stop()
 
 class TestBufferWrite(unittest.TestCase):
 
@@ -151,17 +152,18 @@ class TestBufferWrite(unittest.TestCase):
         self.buffer.write(data_a, force=True)
         data_b = random.normal(size=10e3)
         self.buffer.write(data_b)
-        n = len(data_a)
+        # n = len(data_a)
         written_a = self.buffer._iface.ReadTagV('speaker', 0, len(data_a))
         written_b = self.buffer._iface.ReadTagV('speaker', len(data_a),
-                len(data_b))
+                                                len(data_b))
         assert_array_almost_equal(written_a, data_a)
         assert_array_almost_equal(written_b, data_b)
 
     def tearDown(self):
         self.circuit.stop()
 
-#class TestCOMWrapper(unittest.TestCase):
+
+# class TestCOMWrapper(unittest.TestCase):
 #
 #    #def test_comtypes(self):
 #    #    from comtypes import client
@@ -196,7 +198,8 @@ class TestBufferWrite(unittest.TestCase):
 #        written = iface.ReadTagV('speaker', 0, len(data))
 #        assert_array_almost_equal(written, data)
 
-#class TestProcess(unittest.TestCase):
+
+# class TestProcess(unittest.TestCase):
 #
 #    def test_read_write(self):
 #        write_size = 50000
@@ -244,4 +247,4 @@ class TestBufferWrite(unittest.TestCase):
 #        np.testing.assert_almost_equal(written, read[:total_samples])
 #
 if __name__ == '__main__':
-    unittest.main() 
+    unittest.main()

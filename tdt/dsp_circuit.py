@@ -12,6 +12,7 @@ from .constants import RCX_COEFFICIENT, RCX_CAST, RCX_STATUS_BITMASK
 import logging
 log = logging.getLogger(__name__)
 
+
 class DSPCircuit(object):
     '''
     Wrapper around the TDT ActiveX object, RPCo.X.
@@ -25,8 +26,8 @@ class DSPCircuit(object):
         Device to load circuit to.
     interface : {'GB', 'USB'}
         Interface to use (see TDT's ActiveX documentation on the Connect*
-        methods for more information).  You almost certainly want 'GB' (which is
-        the default value).
+        methods for more information).  You almost certainly want 'GB' (which
+        is the default value).
     device_id : number
         ID of device
     load : boolean (optional)
@@ -36,24 +37,24 @@ class DSPCircuit(object):
         Start (i.e. run) the circuit after loading it.  Default is False.
     address : two-tuple (str, int)
         Connect to the address specified as a two-tuple in (host, port) format
-        using the network-aware proxy of TDT's driver.  If None, defaults to the
-        TDT implementation of the RPcoX and zBUSx drivers.
+        using the network-aware proxy of TDT's driver.  If None, defaults to
+        the TDT implementation of the RPcoX and zBUSx drivers.
     '''
 
     def __init__(self, circuit_name, device_name, interface='GB', device_id=1,
-            load=True, start=False, fs=None, address=None):
+                 load=True, start=False, fs=None, address=None):
         self.device_name = device_name
         self.name = split(circuit_name)[1]
         self.device_id = device_id
         self.server_address = address
-        self.interface= interface
+        self.interface = interface
 
         # Hint for Matlab users: _iface is the same COM object a Matlab user
-        # typically works with when they call actxserver('RPco.X').  It supports
-        # the exact same methods as the Matlab version.
+        # typically works with when they call actxserver('RPco.X').  It
+        # supports the exact same methods as the Matlab version.
         self._iface = connect_rpcox(device_name, interface=interface,
-                device_id=device_id, address=address)
-        self._zbus  = connect_zbus(interface=interface, address=address)
+                                    device_id=device_id, address=address)
+        self._zbus = connect_zbus(interface=interface, address=address)
         self.path = get_cof_path(abspath(circuit_name))
         if load:
             self.load()
@@ -69,8 +70,8 @@ class DSPCircuit(object):
         '''
         Provides support for pickling, which is required by the multiprocessing
         module for launching a new process.  _iface and _zbus are PyIDispatch
-        objects which do not support pickling, so we just delete them and pickle
-        the rest.
+        objects which do not support pickling, so we just delete them and
+        pickle the rest.
         '''
         state = self.__dict__.copy()
         del state['_iface']
@@ -189,7 +190,7 @@ class DSPCircuit(object):
             Name of the parameter tag to read the value from
 
         Raises DSPError
-            If the tag does not exist or is not a scalar value (e.g.  you cannot
+            If the tag does not exist or is not a scalar value (e.g. you cannot
             use this method with parameter tags linked to a buffer)
         '''
         # Check to see if tag exists
@@ -202,9 +203,9 @@ class DSPCircuit(object):
         value = self._iface.GetTagVal(name)
         log.debug("Get %s:%s is %r", self, name, value)
 
-        # The ActiveX wrapper always returns a float, regardless of whether it's
-        # a bool, int or float.  Usually this is not an issue for most Python
-        # code, but let's be sure to cast the value to the correct type.
+        # The ActiveX wrapper always returns a float, regardless of whether
+        # it's a bool, int or float.  Usually this is not an issue for most
+        # Python code, but let's be sure to cast the value to the correct type.
         if tag_type in RCX_CAST:
             return RCX_CAST[tag_type](value)
         else:
@@ -216,7 +217,7 @@ class DSPCircuit(object):
 
         Parameters
         ==========
-        name : str 
+        name : str
             Name of the parameter tag to write the value to
         value : int or float
             Value to write
@@ -247,10 +248,10 @@ class DSPCircuit(object):
     def set_coefficients(self, name, data):
         '''
         Load data to a coefficient or matrix input
-        
+
         Parameters
         ==========
-        name : str 
+        name : str
             Name of the parameter tag to write the data to
         data : array-like
             Data to write to tag.  Must be 1D format (even for matrices).
@@ -263,9 +264,9 @@ class DSPCircuit(object):
             the component.
 
         Note that as of 3.10.2011, RPvds' CoefLoad component appears to be
-        broken (per conversation with TDT's tech support -- Mark Hanus and Chris
-        Walters).  As a workaround, connect a data tag directly to the >K or
-        >Coef input of the component.
+        broken (per conversation with TDT's tech support -- Mark Hanus and
+        Chris Walters).  As a workaround, connect a data tag directly to the
+        >K or >Coef input of the component.
         '''
         tag_size, tag_type = self.tags[name]
         if tag_type != RCX_COEFFICIENT:
@@ -279,7 +280,7 @@ class DSPCircuit(object):
     def start(self, pause=0.25):
         '''
         Analogue of RPco.X.Run
-        
+
         The circuit sometimes requires a couple hundred msec "settle" before we
         can commence data acquisition
         '''
@@ -311,7 +312,8 @@ class DSPCircuit(object):
             corresponding mode to set the zBUS trigger to
 
         Note that due to a bug in the TDT ActiveX library for versions greater
-        than 56, we have no way of ensuring that zBUS trigger A or B were fired.
+        than 56, we have no way of ensuring that zBUS trigger A or B were
+        fired.
         '''
         # Convert mode string to the corresponding integer
         mode_enum = dict(pulse=0, high=1, low=2)
@@ -323,7 +325,8 @@ class DSPCircuit(object):
             self._zbus.zBusTrigB(0, mode_enum[mode], 10)
         elif (1 <= trigger < 10) and mode == 'pulse':
             if not self._iface.SoftTrg(trigger):
-                raise DSPError(self, "Could not fire soft trigger %d" % trigger)
+                raise DSPError(self, "Could not fire soft trigger %d"
+                               % trigger)
         else:
             mesg = "Unsupported trigger mode %s %s" % (trigger, mode)
             raise DSPError(self, mesg)
@@ -367,19 +370,19 @@ class DSPCircuit(object):
             state += 'Rn'
         return "{}:{}:{}".format(self.device_name, self.name, state)
 
-    def set_sort_windows(self, name, windows):    
+    def set_sort_windows(self, name, windows):
         '''
         Utility function for configuring TDT's SpikeSort component coefficients
-        
+
         Windows should be a list of 3-tuples in the format (time, center volt,
         half-height)
-        
+
         If the windows overlap in time such that they cannot be converted into
-        a coefficient buffer, and error will be raised. 
-        '''        
+        a coefficient buffer, and error will be raised.
+        '''
         tag_size, tag_type = self.tags[name]
         if tag_type != RCX_COEFFICIENT:
-            raise DSPError(self, "Tag %s is not a coefficient buffer" % name)            
+            raise DSPError(self, "Tag %s is not a coefficient buffer" % name)
         coefficients = np.zeros(tag_size).reshape((-1, 3))
         processed = []
         for i, window in enumerate(windows):
@@ -388,7 +391,7 @@ class DSPCircuit(object):
             if x in processed:
                 raise DSPError(self, "Windows for %s overlap in time" % name)
             processed.append(x)
-            coefficients[x] = center, height, i+1            
+            coefficients[x] = center, height, i+1
         self.set_coefficients(name, coefficients.ravel())
 
     def convert(self, value, src_unit, dest_unit):
@@ -418,8 +421,8 @@ class DSPCircuit(object):
             ms
                 milliseconds
             nPow2
-                number of samples, coerced to the next greater power of 2 (used for
-                ensuring efficient FFT computation)
+                number of samples, coerced to the next greater power of 2 (used
+                for ensuring efficient FFT computation)
 
         Given a DSP clock frequency of 10 kHz::
 
@@ -457,4 +460,4 @@ class DSPCircuit(object):
         '''
         for tag, (tag_size, tag_type) in self.tags.items():
             if tag_size == 1:
-                print tag, self.get_tag(tag)
+                print(tag, self.get_tag(tag))

@@ -1,4 +1,4 @@
-# -*- coding: mbcs -*-
+# -*- coding: utf-8 -*-
 # Created by makepy.py version 0.5.00
 # By python version 2.6.6 |EPD 6.3-1 (32-bit)| (r266:84292, Sep 20 2010, 11:26:16) [MSC v.1500 32 bit (Intel)]
 # From type library 'TTankEng.exe'

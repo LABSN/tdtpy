@@ -1,17 +1,20 @@
-import logging
-log = logging.getLogger(__name__)
 import numpy as np
+import logging
 
 from .abstract_ring_buffer import AbstractRingBuffer
 
+log = logging.getLogger(__name__)
+
+
 class SharedRingBuffer(AbstractRingBuffer):
     '''
-    Implementation that reads/writes data to a shared memory location.  Used for
-    inter-process communication.  The assumption is one process only reads and
-    the other process only writes.  Does not support single-write, multi-read
-    (i.e. only one process can do the reading).
+    Implementation that reads/writes data to a shared memory location.  Used
+    for inter-process communication.  The assumption is one process only reads
+    and the other process only writes.  Does not support single-write,
+    multi-read (i.e. only one process can do the reading).
 
-    Cache *must* be a view into a Numpy array.  use shmem_to_ndarray and reshape
+    Cache *must* be a view into a Numpy array.  use shmem_to_ndarray and
+    reshape.
     '''
 
     def __init__(self, cache, iwrite, iread, ioffset, condition, circuit):
@@ -29,6 +32,7 @@ class SharedRingBuffer(AbstractRingBuffer):
         self._iwrite.value = 0
         self._iread.value = 0
         self._processed = False
+
     def _get_empty_array(self, samples):
         return np.empty((self.channels, samples), dtype=self._dtype)
 
@@ -74,7 +78,7 @@ class SharedRingBuffer(AbstractRingBuffer):
         with self._condition:
             result = super(SharedRingBuffer, self).write(data)
             # Now, wait till the subprocess acknowledges that it has recieved
-            # the data and has uploaded it to the hardware before returning.  By
+            # the data and has uploaded it to the hardware before returning. By
             # telling _condition to wait, it will release the lock, and then
             # wait for the other process to issue a _condition.notify() signal.
             # At this point, the lock returns to this thread.
@@ -83,9 +87,9 @@ class SharedRingBuffer(AbstractRingBuffer):
 
     def set(self, data, timeout=None):
         with self._condition:
-            # Locking is very important here because we need to ensure that both
-            # _ioffset and the data are written before the other process has
-            # access to it.
+            # Locking is very important here because we need to ensure that
+            # both _ioffset and the data are written before the other process
+            # has access to it.
             self._ioffset.value = 0
             self.write(data, timeout=timeout)
 
@@ -97,10 +101,12 @@ class SharedRingBuffer(AbstractRingBuffer):
         with self._condition:
             self._condition.notify()
 
+
 class ReadableSharedRingBuffer(SharedRingBuffer):
 
     def _write(self, offset, data):
         raise NotImplementedError
+
 
 class WriteableSharedRingBuffer(SharedRingBuffer):
 
