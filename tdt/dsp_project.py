@@ -21,16 +21,31 @@ class DSPProject(object):
         self.server_address = address
         atexit.register(self.stop)
 
-    def load_circuit(self, circuit_name, device_name):
+    def load_circuit(self, circuit_name, device_name, device_id=1):
         '''
         Load the circuit to the specified device
+
+        Parameters
+        ----------
+        circuit_name : str
+            Path to circuit to load
+        device_name : str
+            Name of TDT System3 device to load circuit to
+        device_id : number
+            ID of device
+
+        Returns
+        -------
+        circuit : instance of DSPCircuit
+            The circuit.
         '''
         self._circuit_info[(circuit_name, device_name)] = []
         # We need to store a reference to the circuit here so we can properly
         # initialize any buffers we need
         circuit = DSPCircuit(circuit_name, device_name,
                              address=self.server_address,
-                             interface=self._interface)
+                             interface=self._interface,
+                             device_id=device_id)
         self._circuits[device_name] = circuit
         return circuit
 

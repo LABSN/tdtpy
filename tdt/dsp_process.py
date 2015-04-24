@@ -174,7 +174,7 @@ class DSPProcess(mp.Process):
         atexit.register(self.terminate)
         super(DSPProcess, self).__init__(target=monitor)
 
-    def load_circuit(self, circuit_name, device_name):
+    def load_circuit(self, circuit_name, device_name, device_id=1):
         '''
         Loads circuit and prepares shared memory for interprocess communication
 
@@ -184,11 +184,18 @@ class DSPProcess(mp.Process):
             Path to circuit to load
         device_name : str
             Name of TDT System3 device to load circuit to
+        device_id : number
+            ID of device
+
+        Returns
+        -------
+        circuit : instance of DSPCircuit
+            The circuit.
         '''
         self._circuit_info[(circuit_name, device_name)] = []
         # We need to store a reference to the circuit here so we can properly
         # initialize any buffers we need
-        circuit = DSPCircuit(circuit_name, device_name)
+        circuit = DSPCircuit(circuit_name, device_name, device_id=device_id)
         self._circuits[device_name] = circuit
         shared_circuit = SharedCircuit(self, circuit_name, device_name)
         shared_circuit.fs = circuit.fs
