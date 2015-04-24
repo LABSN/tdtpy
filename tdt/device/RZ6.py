@@ -1,6 +1,8 @@
 import numpy as np
+import unittest
 
 RZ6_ATTEN_BASE = 255*256*256
+
 
 def split_attenuation(att):
     '''
@@ -20,35 +22,38 @@ def split_attenuation(att):
     sw_att = att-hw_att
     return hw_att, sw_att
 
+
 def db_to_sf(db):
     sf = 10**(-db/20.0)
     return sf
+
 
 def atten_to_bits(attA, attB, mute=False):
     '''
     Given the desired attenuation, determine the bit value that needs to be
     inserted into memory address 2 on the RZ6 to set the hardware attenuators
-    accordingly.  This can replace the computations perfomed in the RZ6 AudioOut
-    macro which takes up to 12% of CPU time at 100 kHz.
+    accordingly.  This can replace the computations perfomed in the RZ6
+    AudioOut macro which takes up to 12% of CPU time at 100 kHz.
 
     Raises ValueError if requested attenuation falls outside range of valid
     values.
     '''
     if not (0 <= attA <= 120):
-        raise ValueError, "Attenuation A must be between 0 and 120 dB"
+        raise ValueError("Attenuation A must be between 0 and 120 dB")
     if not (0 <= attB <= 120):
-        raise ValueError, "Attenuation B must be between 0 and 120 dB"
+        raise ValueError("Attenuation B must be between 0 and 120 dB")
     attA = min(int(attA/20), 3)
     attB = min(int(attB/20), 3) << 4
     mute = int(mute) * 256
     return RZ6_ATTEN_BASE | attA | attB | mute
 
+
 def waveform_to_bits(waveform, sf):
     '''
     Scale and convert waveform to the binary data that needs to be inserted
-    (via the RPvds poke component) into memory address 15 (for Out-A) or 16 (for
-    Out-B).  This replaces the computations performed in the RZ6 AudioOut macro
-    which take up to 4% of CPU time at 100 kHz.  Used in combination wtih
+    (via the RPvds poke component) into memory address 15 (for Out-A) or 16
+    (for Out-B).  This replaces the computations performed in the RZ6 AudioOut
+    macro which take up to 4% of CPU time at 100 kHz.  Used in combination with
     atten_to_bits, you can free up 16% of CPU time.
     '''
     waveform = np.asanyarray(waveform)
@@ -56,11 +61,10 @@ def waveform_to_bits(waveform, sf):
     waveform = waveform.astype('i')
     return (waveform | 255) ^ ((waveform >> 24) & 255)
 
-import unittest
 
 class TestWithHardware(unittest.TestCase):
 
-    CIRCUIT = '../components/test_RZ6_audio_out' 
+    CIRCUIT = '../components/test_RZ6_audio_out'
 
     def setUp(self):
         from tdt import DSPCircuit
@@ -69,12 +73,13 @@ class TestWithHardware(unittest.TestCase):
         self.circuit = DSPCircuit(circuit, 'RZ6')
         self.buffer_in = self.circuit.get_buffer('in', 'w')
         self.buffer_out = self.circuit.get_buffer('out', 'r', src_type='int32',
-                dest_type='int32', block_size=1)
+                                                  dest_type='int32',
+                                                  block_size=1)
         self.circuit.start()
 
     def test_waveform_to_bits(self):
         from numpy.random import random
-        from numpy.testing import assert_array_equal
+        from numpy.testing import assert_array_equal  # noqa
         waveform = random(100e3).astype('float32')
         self.circuit.set_tag('nHi', 100e3)
         self.buffer_in.set(waveform)
@@ -83,28 +88,30 @@ class TestWithHardware(unittest.TestCase):
 
         # Due to various vagaries of shuffling bits around, I believe the least
         # significant bit is sometimes lost when uploading to the RZ6.  This
-        # results in a maximum difference between the actual and expected values
-        # of 256.  It's not clear exactly what the significance of this number
-        # actually is to me.
+        # results in a maximum difference between the actual and expected
+        # values of 256.  It's not clear exactly what the significance of this
+        # number actually is to me.
         difference = actual-expected
         self.assertTrue(difference.max() <= 256)
+
 
 class TestRZ6Functions(unittest.TestCase):
 
     # attA, attB, expected bit value
     ATTEN_TEST_VALUES = [
-            (0, 20, 16711696),
-            (0, 40, 16711712),
-            (0, 60, 16711728),
-            (20, 0, 16711681),
-            (20, 40, 16711713),
-            (20, 60, 16711729),
-            (40, 0, 16711682),
-            (40, 20, 16711698),
-            (40, 60, 16711730),
-            (60, 0, 16711683),
-            (60, 20, 16711699),
-            (60, 40, 16711715),]
+        (0, 20, 16711696),
+        (0, 40, 16711712),
+        (0, 60, 16711728),
+        (20, 0, 16711681),
+        (20, 40, 16711713),
+        (20, 60, 16711729),
+        (40, 0, 16711682),
+        (40, 20, 16711698),
+        (40, 60, 16711730),
+        (60, 0, 16711683),
+        (60, 20, 16711699),
+        (60, 40, 16711715),
+    ]
 
     def test_attenuation_to_bits(self):
         for a, b, expected in self.ATTEN_TEST_VALUES:

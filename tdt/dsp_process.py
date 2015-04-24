@@ -1,27 +1,29 @@
 import time
-import ctypes 
+import ctypes
 import multiprocessing as mp
 import itertools
 
 import logging
-log = logging.getLogger(__name__)
 
 from .util import shmem_as_ndarray, NP_TO_CTYPES
 from .dsp_circuit import DSPCircuit
-from .shared_ring_buffer import ReadableSharedRingBuffer, \
-        WriteableSharedRingBuffer
+from .shared_ring_buffer import (ReadableSharedRingBuffer,
+                                 WriteableSharedRingBuffer)
+
+log = logging.getLogger(__name__)
+
 
 def monitor(circuit_info, poll_period, pipe):
     '''
-    Monitor loop that will be run in the subprocess.  
+    Monitor loop that will be run in the subprocess.
     '''
     global RUN
     RUN = True
     log.debug("STARTING")
 
-    ##############################################################################
+    ###########################################################################
     # Internal (private) function definitions
-    ##############################################################################
+    ###########################################################################
     def process_request(pipe, circuits, timeout):
         # Check to see if data is available.  Keep checking until the timeout
         # period is over.
@@ -54,8 +56,8 @@ def monitor(circuit_info, poll_period, pipe):
             data = sw_buffer.read()
             hw_buffer.set(data)
             sw_buffer._ioffset.value = -1
-            log.debug("Request to set buffer %s with %d samples", 
-                    hw_buffer, len(data))
+            log.debug("Request to set buffer %s with %d samples",
+                      hw_buffer, len(data))
             sw_buffer.notify()
         elif hw_buffer.available() and sw_buffer.pending():
             log.debug("Writing data to buffer")
@@ -67,9 +69,9 @@ def monitor(circuit_info, poll_period, pipe):
             if not sw_buffer.pending():
                 sw_buffer.notify()
 
-    ##############################################################################
+    ###########################################################################
     # Initialization code
-    ##############################################################################
+    ###########################################################################
     # Load the circuit first so we can use them to help initialize the buffers.
     # Once the circuit is loaded, initialize the bufers.  We do not currently
     # support read/write buffers (this would require locks, etc., and be
@@ -95,10 +97,11 @@ def monitor(circuit_info, poll_period, pipe):
             hw_buffer = circuit.get_buffer(buffer_name, mode, *args, **kwargs)
             cache = shmem_as_ndarray(shmem).reshape((hw_buffer.channels, -1))
 
-            # The mode refers to the hardware buffer itself.  If we want to read
-            # from the hardware buffer, then we need to write the data to the shared
-            # memory via a WriteableSharedRingBuffer.  The other process will be
-            # viewing the same memory space via a ReadableSharedRingBuffer.
+            # The mode refers to the hardware buffer itself.  If we want to
+            # read from the hardware buffer, then we need to write the data to
+            # the shared memory via a WriteableSharedRingBuffer.  The other
+            # process will be viewing the same memory space via a
+            # ReadableSharedRingBuffer.
             args = cache, iwrite, iread, ioffset, condition, circuit
             if mode == 'r':
                 sw_buffer = WriteableSharedRingBuffer(*args)
@@ -110,16 +113,16 @@ def monitor(circuit_info, poll_period, pipe):
         # Ok, now that we've initialized all the buffers for this circuit, it's
         # safe to start it.  Very important!  If you are running code that
         # requires multiple devices, then you need to be sure that the circuits
-        # are designed to handle being started asynchronously (e.g. use the zBUS
-        # trigger).
+        # are designed to handle being started asynchronously (e.g. use the
+        # zBUS trigger).
         circuit.start()
 
     # Notify the parent that the process has started
     pipe.send((None, 'STARTED'))
 
-    ##############################################################################
+    ###########################################################################
     # Actual event loop
-    ##############################################################################
+    ###########################################################################
     while RUN:
         log.debug("RUNNING")
         start = time.time()
@@ -152,6 +155,7 @@ def monitor(circuit_info, poll_period, pipe):
     pipe.send((None, 'OK'))
 
     # Finally, the process exits.
+
 
 class DSPProcess(mp.Process):
 
@@ -192,9 +196,8 @@ class DSPProcess(mp.Process):
 
     def get_buffer(self, device_name, buffer_name, mode, *args, **kwargs):
         if self.is_alive():
-            mesg = "Cannot allocate memory for buffer cache once process" + \
-                    "has started"
-            raise SystemError, mesg
+            raise SystemError("Cannot allocate memory for buffer cache once "
+                              "process has started")
 
         # Compute how much shared memory we need to allocate for the cache.  We
         # load the buffer in the parent process so we can inspect the circuit
@@ -207,7 +210,7 @@ class DSPProcess(mp.Process):
 
         # Allocate the cache memory and create shared values used for
         # inter-process communication
-        shmem = mp.RawArray(mem_type, cache_size) 
+        shmem = mp.RawArray(mem_type, cache_size)
         iwrite = mp.Value(ctypes.c_uint)
         iread = mp.Value(ctypes.c_uint)
         ioffset = mp.Value(ctypes.c_int)
@@ -217,10 +220,11 @@ class DSPProcess(mp.Process):
 
         # Save the information we need for reinitializing the buffer once the
         # process launches
-        info = dict(circuit_name=circuit.circuit_name,
-                device=circuit.device_name, buffer_name=buffer_name, mode=mode,
-                args=args, kwargs=kwargs, shmem=shmem, iwrite=iwrite,
-                iread=iread, ioffset=ioffset, condition=condition)
+        info = dict(
+            circuit_name=circuit.circuit_name,
+            device=circuit.device_name, buffer_name=buffer_name, mode=mode,
+            args=args, kwargs=kwargs, shmem=shmem, iwrite=iwrite,
+            iread=iread, ioffset=ioffset, condition=condition)
         key = (circuit.circuit_name, circuit.device_name)
         self._circuit_info[key].append(info)
 
@@ -246,11 +250,11 @@ class DSPProcess(mp.Process):
         # successfully launched.  If we do not recive a message after 10
         # seconds or recieve the wrong response, raise an error.
         if not self._parent_pipe.poll(10):
-            raise SystemError, "Unable to launch process"
+            raise SystemError("Unable to launch process")
         else:
             id, response = self._parent_pipe.recv()
             if response != 'STARTED':
-                raise SystemError, "Unable to launch process"
+                raise SystemError("Unable to launch process")
 
     def run(self):
         monitor(self._circuit_info, self.poll_period, self._child_pipe)
@@ -259,36 +263,38 @@ class DSPProcess(mp.Process):
         '''
         Passes along request to the other process and waits for a response.
         '''
-        # Generate a unique ID that ensures that the other process is responding
-        # to the correct item 
+        # Generate a unique ID that ensures that the other process is
+        # responding to the correct item
         if args is None:
             args = ()
         id = self._request_id.next()
         # Send the request to the process via a queue
         log.debug('Requesting %s:%s with arguments %r', device_name, request,
-                args)
+                  args)
         self._parent_pipe.send((id, device_name, request, args))
-        # Wait till the response is available.  If no response is recieved after
-        # one second, raise an exception.
+        # Wait till the response is available.  If no response is recieved
+        # after one second, raise an exception.
         if not self._parent_pipe.poll(timeout):
-            mesg = "No response recieved for request %s(%r)" % (request, args)
-            raise IOError, mesg
+            raise IOError("No response recieved for request %s(%r)"
+                          % (request, args))
         # Get the response
         id, response = self._parent_pipe.recv()
         # Make sure it's the right response (this is probably an unecessary
         # check since we are blocking)
-        if id != id:
-            raise IOException, "Wrong response returned"
+        if id != id:  # XXX This does nothing...?
+            raise IOError("Wrong response returned")
         return response
 
     def stop(self):
         self._parent_pipe.send((None, None, 'TERMINATE', None))
         id, response = self._parent_pipe.recv()
 
+
 def partial(f, device_name, action, timeout):
     def wrapper(*args):
         return f(device_name, action, args, timeout)
     return wrapper
+
 
 class SharedCircuit(object):
     '''
@@ -321,5 +327,6 @@ class SharedCircuit(object):
         This is just wraps up the method call into an object that can be sent
         via the queue to the other process.
         '''
-        if name in self.PIPELINE_METHODS: 
-            return partial(self.process._get_response, self.device_name, name, 5)
+        if name in self.PIPELINE_METHODS:
+            return partial(self.process._get_response, self.device_name,
+                           name, 5)

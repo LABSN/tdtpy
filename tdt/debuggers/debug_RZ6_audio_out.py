@@ -1,4 +1,5 @@
 import itertools
+
 from .. import DSPCircuit
 from ..device.RZ6 import split_atten, atten_to_bits
 
@@ -14,12 +15,12 @@ if __name__ == '__main__':
         poke = circuit.get_tag('Poke')
         guess = atten_to_bits(a, b)
         circuit.set_tag('test_val', guess)
-        print
-        print a, b, padA, padB, poke, guess
-        #raw_input("Please check value on RZ6 LCD display")
+        print('')
+        print(a, b, padA, padB, poke, guess)
+        # raw_input("Please check value on RZ6 LCD display")
 
     for a in (0, 12.5, 30, 40, 89.1):
         circuit.set_tag('attA', a)
         expected_sf = circuit.get_tag('SF-A')
         actual_att, actual_sf = split_atten(a)
-        print a, expected_sf, actual_sf
+        print(a, expected_sf, actual_sf)
