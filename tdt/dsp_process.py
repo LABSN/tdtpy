@@ -221,11 +221,11 @@ class DSPProcess(mp.Process):
         # Save the information we need for reinitializing the buffer once the
         # process launches
         info = dict(
-            circuit_name=circuit.circuit_name,
+            circuit_name=circuit.name,
             device=circuit.device_name, buffer_name=buffer_name, mode=mode,
             args=args, kwargs=kwargs, shmem=shmem, iwrite=iwrite,
             iread=iread, ioffset=ioffset, condition=condition)
-        key = (circuit.circuit_name, circuit.device_name)
+        key = (circuit.name, circuit.device_name)
         self._circuit_info[key].append(info)
 
         # Initialize the shared memory space for storing data acquired from the
@@ -317,7 +317,7 @@ class SharedCircuit(object):
     def __init__(self, process, circuit_name, device_name):
         self.process = process
         self.device_name = device_name
-        self.circuit_name = circuit_name
+        self.name = circuit_name
 
     def get_buffer(self, name, *args, **kwargs):
         return self.process.get_buffer(self.device_name, name, *args, **kwargs)
