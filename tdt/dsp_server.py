@@ -1,16 +1,15 @@
-from cStringIO import StringIO
+from six.moves import cStringIO as StringIO, cPickle as pickle
 from tempfile import NamedTemporaryFile
 import uuid
 import socket
 import struct
 from select import select
-import cPickle as pickle
 import numpy as np
 import logging
 import os
 
 # Required so that sphinx can build this on readthedocs.org
-import actxobjects
+from . import actxobjects
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)

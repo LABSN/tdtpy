@@ -1,11 +1,14 @@
 from distutils.core import setup
 from os import path
+try:
+    import setuptools  # noqa, setuptools namespace
+except Exception:
+    pass
 
 CLASSIFIERS = [
     'Development Status :: 4 - Beta',
     'Intended Audience :: Science/Research',
-    #'Programming Language :: Python',
-    'Programming Language :: Python :: 2',
+    'Programming Language :: Python',
     'Topic :: Scientific/Engineering',
     'Topic :: System :: Hardware',
     'License :: OSI Approved :: GNU General Public License (GPL)'
@@ -17,7 +20,7 @@ with open(path.join(here, 'readme.rst')) as f:
 
 long_description += '''
 
-Source code: http://bitbucket.org/bburan/tdtpy
+Source code: http://github.com/LABSN/tdtpy
 
 Documentation: http://tdtpy.readthedocs.org
 
@@ -33,7 +36,7 @@ setup(
     license='GPLv3',
     description='Module for communicating with TDT\'s System 3 hardware',
     long_description=long_description,
-    requires=['win32com'],
+    requires=['win32com', 'six'],
     package_data={'tdt': ['components/*.rcx']},
     classifiers=CLASSIFIERS,
 )
