@@ -1,6 +1,6 @@
-from RPcoX import RPcoX
-from ZBUSx import ZBUSx
-from PA5x import PA5x
+from .RPcoX import RPcoX
+from .ZBUSx import ZBUSx
+from .PA5x import PA5x
 
 '''
 The files in this directory were generated using makepy.  If TDT ever updates

@@ -25,11 +25,10 @@ import os
 import numpy as np
 import ctypes
 
-import actxobjects
 import pywintypes
 
 from .dsp_error import DSPError
-from . import dsp_server
+from . import dsp_server, actxobjects
 
 import logging
 log = logging.getLogger(__name__)
