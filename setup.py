@@ -15,7 +15,7 @@ CLASSIFIERS = [
 ]
 
 here = path.dirname(path.abspath(__file__))
-with open(path.join(here, 'readme.rst')) as f:
+with open(path.join(here, 'README.rst')) as f:
     long_description = f.read().strip()
 
 long_description += '''
