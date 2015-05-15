@@ -2,7 +2,8 @@
 TDTPy
 =====
 
-[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.17651.svg)](http://dx.doi.org/10.5281/zenodo.17651)
+.. image:: https://zenodo.org/badge/doi/10.5281/zenodo.17651.svg   
+   :target: http://dx.doi.org/10.5281/zenodo.17651
 
 TDTPy is a Python wrapper around `Tucker-Davis Technologies`_ `ActiveX library`_
 [PDF link] (known as RPcoX) for communicating with their System 3 hardware (e.g.
