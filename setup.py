@@ -28,7 +28,7 @@ Documentation: http://tdtpy.readthedocs.org
 
 setup(
     name='TDTPy',
-    version='0.7',
+    version='0.7.1',
     author='Brad Buran',
     author_email='bburan@alum.mit.edu',
     packages=['tdt', 'tdt.actxobjects', 'tdt.device'],
