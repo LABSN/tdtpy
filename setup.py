@@ -1,6 +1,6 @@
 from distutils.core import setup
-import tdt
 from os import path
+import numpy  # noqa; a requirement, but *don't* have pip try to install it
 try:
     import setuptools  # noqa, setuptools namespace
 except Exception:
@@ -32,12 +32,15 @@ setup(
     version='0.8.dev0',
     author='Brad Buran',
     author_email='bburan@alum.mit.edu',
-    packages=['tdt', 'tdt.actxobjects', 'tdt.device'],
+    packages=['tdt',
+              'tdt.actxobjects',
+              'tdt.components',
+              'tdt.device'],
     url='http://tdtpy.readthedocs.org',
     license='BSD (3-clause)',
     description='Module for communicating with TDT\'s System 3 hardware',
     long_description=long_description,
-    requires=['win32com', 'six'],
+    install_requires=['six', 'pypiwin32'],
     package_data={'tdt': ['components/*.rcx']},
     classifiers=CLASSIFIERS,
 )

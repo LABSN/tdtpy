@@ -43,4 +43,11 @@ library:
 .. _System 3: http://www.tdt.com/products.htm 
 .. _ActiveX library: http://www.tdt.com/T2Download/manuals/ActiveX_User_Reference.pdf
 
+The minimum required dependencies to run the software are:
+
+  - Python >= 2.7
+  - NumPy >= 1.8
+  - pywin32
+  - six
+
 TDTPy is distributed under the BSD license.

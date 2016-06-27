@@ -1,0 +1,22 @@
+environment:
+  global:
+      PYTHON: "C:\\conda"
+      MINICONDA_VERSION: "latest"
+      CONDA_DEPENDENCIES: "numpy six"
+  matrix:
+      - PYTHON_VERSION: "2.7"
+        PYTHON_ARCH: "32"
+      - PYTHON_VERSION: "2.7"
+        PYTHON_ARCH: "64"
+
+install:
+    - "git clone git://github.com/astropy/ci-helpers.git"
+    - "powershell ci-helpers/appveyor/install-miniconda.ps1"
+    - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+    - "activate test"
+    - "python setup.py install"
+
+build: false
+
+test_script:
+    - "python -c \"import tdt; print(tdt)\""
