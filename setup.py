@@ -29,7 +29,7 @@ Documentation: http://tdtpy.readthedocs.org
 
 setup(
     name='TDTPy',
-    version='0.7.3',
+    version='0.8.0.dev0',
     author='Brad Buran',
     author_email='bburan@alum.mit.edu',
     packages=['tdt',
