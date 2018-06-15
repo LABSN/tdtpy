@@ -13,8 +13,7 @@ def wrap(length, offset, buffer_size):
 
 def pending(old_idx, new_idx, buffer_size):
     '''
-    Returns the number of slots that have been filled with data since the
-    last read.
+    Returns the number of slots between new_idx and old_idx given buffer size.
     '''
     if new_idx < old_idx:
         return buffer_size-old_idx+new_idx
@@ -40,11 +39,6 @@ class AbstractRingBuffer(object):
     The following attributes provide information on the state of the buffer:
         * total_samples_written
         * total_samples_read
-
-    TODO:
-        * write_cycle
-        * read_cycle
-
     '''
     total_samples_written = 0
     total_samples_read = 0
@@ -54,6 +48,10 @@ class AbstractRingBuffer(object):
     read_index = 0
     write_index = 0
 
+    # This tracks the current "loop" of the buffer.
+    write_cycle = 0
+    read_cycle = 0
+
     def pending(self):
         '''
         Number of filled slots waiting to be read
@@ -62,7 +60,7 @@ class AbstractRingBuffer(object):
 
     def blocks_pending(self):
         '''
-        Number of filled slots waiting to be read
+        Number of filled blocks waiting to be read
         '''
         return int(self.pending()/self.block_size)*self.block_size
 
@@ -70,7 +68,11 @@ class AbstractRingBuffer(object):
         '''
         Number of empty slots available for writing
         '''
-        return self.size-self.pending()
+        if (self.total_samples_written == 0) and (self.read_index == 0):
+            return self.size
+        log.debug('Available: write index %d, read index %d, size %d',
+                  self.write_index, self.read_index, self.size)
+        return pending(self.write_index, self.read_index, self.size)
 
     def blocks_available(self):
         return int(self.available()/self.block_size)*self.block_size
@@ -88,9 +90,12 @@ class AbstractRingBuffer(object):
 
         data = self._get_empty_array(samples)
         samples_read = 0
-        for o, l in wrap(samples, self.read_index, self.size):
+        for i, (o, l) in enumerate(wrap(samples, self.read_index, self.size)):
             data[..., samples_read:samples_read+l] = self._read(o, l)
             samples_read += l
+            if i > 0:
+                self.read_cycle += 1
+
         self.read_index = (o+l) % self.size
         self.total_samples_read += samples_read
         return data
@@ -98,6 +103,9 @@ class AbstractRingBuffer(object):
     def write(self, data, force=False):
         available = self.available()
         samples = data.shape[-1]
+        log.debug('%d samples available for write. Writing %d samples.',
+                  available, samples)
+
         if samples == 0:
             return
         elif not force and (samples > available):
@@ -106,11 +114,15 @@ class AbstractRingBuffer(object):
             raise ValueError(mesg % (samples, available))
 
         samples_written = 0
-        for o, l in wrap(samples, self.write_index, self.size):
-            if not self._write(o, data[...,
-                                       samples_written:samples_written+l]):
+        for i, (o, l) in enumerate(wrap(samples, self.write_index, self.size)):
+            lb = samples_written
+            ub = samples_written + l
+            if not self._write(o, data[..., lb:ub]):
                 raise SystemError('Problem with writing data to buffer')
             samples_written += l
+            if i > 0:
+                self.write_cycle += 1
+
         self.write_index = (o+l) % self.size
         self.total_samples_written += samples_written
         return samples_written

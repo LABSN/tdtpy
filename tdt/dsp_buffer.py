@@ -75,7 +75,7 @@ class DSPBuffer(AbstractRingBuffer):
                 log.debug("%s: found sf_tag %s", self, sf_tag)
         self.sf_tag = sf_tag
         if self.sf_tag is not None:
-            self.sf = self._iface.GetTagVal(self.sf_tag)
+            self.sf = self.circuit.get_tag(self.sf_tag)
             log.debug("%s: scaling factor is %d", self, self.sf)
         else:
             self.sf = 1
@@ -99,7 +99,7 @@ class DSPBuffer(AbstractRingBuffer):
                 log.debug("%s: found dec_tag %s", self, dec_tag)
         self.dec_tag = dec_tag
         if self.dec_tag is not None:
-            self.dec_factor = self._iface.GetTagVal(self.dec_tag)
+            self.dec_factor = self.circuit.get_tag(self.dec_tag)
             self.fs = circuit.fs/float(self.dec_factor)
         else:
             self.dec_factor = 1
@@ -204,15 +204,15 @@ class DSPBuffer(AbstractRingBuffer):
         # update size
         self.n_slots_max = self._iface.GetTagSize(self.data_tag)
         if self.size_tag is not None:
-            self.n_slots = self._iface.GetTagVal(self.size_tag)
+            self.n_slots = self.circuit.get_tag(self.size_tag)
         else:
             self.n_slots = self.n_slots_max
             log.debug("%s: no size tag available, using GetTagSize", self)
 
-        self.n_samples = self.n_slots * self.compression
-        self.n_samples_max = self.n_slots_max * self.compression
-        self.size = self.n_samples / self.channels
-        self.size_max = self.n_samples_max / self.channels
+        self.n_samples = round(self.n_slots * self.compression)
+        self.n_samples_max = round(self.n_slots_max * self.compression)
+        self.size = round(self.n_samples / self.channels)
+        self.size_max = round(self.n_samples_max / self.channels)
         self.sample_time = self.size / self.fs
         self.max_sample_time = self.size_max / self.fs
 
@@ -364,12 +364,21 @@ class DSPBuffer(AbstractRingBuffer):
 class ReadableDSPBuffer(DSPBuffer):
 
     def _get_write_index(self):
-        index = self._iface.GetTagVal(self.idx_tag)
+        index = self.circuit.get_tag(self.idx_tag)
         actual_index = index * self.compression / self.channels
         log.debug("%s: index raw %d, actual %d", self, index, actual_index)
         return actual_index
 
     write_index = property(_get_write_index)
+
+    def _get_write_cycle(self):
+        if self.cycle_tag is None:
+            return None
+        cycle = self.circuit.get_tag(self.cycle_tag)
+        log.debug("%s: cycle", cycle)
+        return cycle
+
+    write_cycle = property(_get_write_cycle)
 
     def _read(self, offset, length):
         log.debug("%s: read offset %d, read size %d", self, offset, length)
@@ -389,10 +398,20 @@ class ReadableDSPBuffer(DSPBuffer):
 class WriteableDSPBuffer(DSPBuffer):
 
     def _get_read_index(self):
-        index = self._iface.GetTagVal(self.idx_tag)
+        # This returns the current sample that's been read
+        index = self.circuit.get_tag(self.idx_tag)
         return index * self.compression / self.channels
 
     read_index = property(_get_read_index)
+
+    def _get_read_cycle(self):
+        if self.cycle_tag is None:
+            return None
+        cycle = self.circuit.get_tag(self.cycle_tag)
+        log.debug("%s: cycle", cycle)
+        return cycle
+
+    read_cycle = property(_get_read_cycle)
 
     def _write(self, offset, data):
         log.debug("%s: write %d samples at %d", self, len(data), offset)
