@@ -172,9 +172,9 @@ def dtype_to_type_str(data_type):
         ...
     ValueError: Unsupported Numpy dtype
     '''
-    if np.issubdtype(data_type, np.int):
+    if np.issubdtype(data_type, np.integer):
         type_code = 'I'
-    elif np.issubdtype(data_type, np.float):
+    elif np.issubdtype(data_type, np.floating):
         type_code = 'F'
     else:
         raise ValueError("Unsupported Numpy dtype")
@@ -222,7 +222,7 @@ def resolution(data_type, scaling_factor):
         Scaling factor applied to data
     '''
     data_type = np.dtype(data_type)
-    if np.issubdtype(data_type, np.int):
+    if np.issubdtype(data_type, np.integer):
         return 1/float(scaling_factor)
     else:
         raise ValueError("Float data types not supported")
