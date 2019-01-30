@@ -1,10 +1,5 @@
-from distutils.core import setup
 from os import path
-import numpy  # noqa; a requirement, but *don't* have pip try to install it
-try:
-    import setuptools  # noqa, setuptools namespace
-except Exception:
-    pass
+from setuptools import setup
 
 CLASSIFIERS = [
     'Development Status :: 4 - Beta',
@@ -29,7 +24,7 @@ Documentation: http://tdtpy.readthedocs.org
 
 setup(
     name='TDTPy',
-    version='0.8.0.dev0',
+    version='0.7.4',
     author='Brad Buran',
     author_email='bburan@alum.mit.edu',
     packages=['tdt',
@@ -40,7 +35,7 @@ setup(
     license='BSD (3-clause)',
     description='Module for communicating with TDT\'s System 3 hardware',
     long_description=long_description,
-    install_requires=['six', 'pypiwin32'],
+    install_requires=['six', 'pypiwin32', 'numpy'],
     package_data={'tdt': ['components/*.rcx']},
     classifiers=CLASSIFIERS,
 )
