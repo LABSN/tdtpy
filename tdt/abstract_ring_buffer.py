@@ -40,17 +40,28 @@ class AbstractRingBuffer(object):
         * total_samples_written
         * total_samples_read
     '''
+    # This should be write_cycle * size + write_index
     total_samples_written = 0
+
+    # This should be read_cycle * size + read_index
     total_samples_read = 0
 
-    # Note that read_index and write_index may be overriden as property
-    # getter/setters in subclasses.
+    # This tracks the current index in the buffer. Note that read_index and
+    # write_index may be overriden as property getter/setters in subclasses.
     read_index = 0
     write_index = 0
 
     # This tracks the current "loop" of the buffer.
     write_cycle = 0
     read_cycle = 0
+
+    def _offset_to_index(self, offset):
+        if offset is None:
+            offset = self.total_samples_written
+        cycle, write_index = divmod(offset, self.size)
+        if self.write_cycle < cycle:
+            raise ValueError('Offset too far back in time')
+        return write_index
 
     def pending(self):
         '''
@@ -64,15 +75,22 @@ class AbstractRingBuffer(object):
         '''
         return int(self.pending()/self.block_size)*self.block_size
 
-    def available(self):
+    def available(self, offset=None):
         '''
         Number of empty slots available for writing
+
+        Parameters
+        ----------
+        offset : {None, int}
+            If specified, return number of samples relative to offset. Offset
+            is relative to beginning of acquisition.
         '''
+        write_index = self._offset_to_index(offset)
         if (self.total_samples_written == 0) and (self.read_index == 0):
             return self.size
         log.debug('Available: write index %d, read index %d, size %d',
-                  self.write_index, self.read_index, self.size)
-        return pending(self.write_index, self.read_index, self.size)
+                  write_index, self.read_index, self.size)
+        return pending(write_index, self.read_index, self.size)
 
     def blocks_available(self):
         return int(self.available()/self.block_size)*self.block_size
@@ -100,21 +118,22 @@ class AbstractRingBuffer(object):
         self.total_samples_read += samples_read
         return data
 
-    def write(self, data, force=False):
-        available = self.available()
+    def write(self, data, offset=None):
+        write_index = self._offset_to_index(offset)
+        available = self.available(offset)
         samples = data.shape[-1]
         log.debug('%d samples available for write. Writing %d samples.',
                   available, samples)
 
         if samples == 0:
             return
-        elif not force and (samples > available):
+        elif samples > available:
             mesg = 'Attempt to write %d samples failed because only ' + \
                    '%d slots are available for write'
             raise ValueError(mesg % (samples, available))
 
         samples_written = 0
-        for i, (o, l) in enumerate(wrap(samples, self.write_index, self.size)):
+        for i, (o, l) in enumerate(wrap(samples, write_index, self.size)):
             lb = samples_written
             ub = samples_written + l
             if not self._write(o, data[..., lb:ub]):

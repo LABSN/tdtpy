@@ -246,7 +246,7 @@ class DSPBuffer(AbstractRingBuffer):
                  intertrial_interval=0, poll_interval=0.1, reset_read=True):
         '''
         Convenience function to handle core logic of acquisition.  Use
-        `DSPCircuit.acquire` or `DSPCircuit.acquire_samples` instead.
+        `DSPBuffer.acquire` or `DSPBuffer.acquire_samples` instead.
         '''
         acquired_data = []
         for i in range(trials):
@@ -418,7 +418,10 @@ class WriteableDSPBuffer(DSPBuffer):
         return self._iface.WriteTagV(self.data_tag, offset, data)
 
     def set(self, data):
-        '''Assumes data is written starting at the first index of the buffer'''
+        '''
+        Assumes data is written starting at the first index of the buffer. Use
+        for epoch-based playout.
+        '''
         data = np.asarray(data)
         size = data.shape[-1]
         if size > self.size_max:
