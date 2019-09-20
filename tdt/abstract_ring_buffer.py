@@ -16,9 +16,9 @@ def pending(old_idx, new_idx, buffer_size):
     Returns the number of slots between new_idx and old_idx given buffer size.
     '''
     if new_idx < old_idx:
-        return buffer_size-old_idx+new_idx
+        return int(buffer_size-old_idx+new_idx)
     else:
-        return new_idx-old_idx
+        return int(new_idx-old_idx)
 
 
 class AbstractRingBuffer(object):
@@ -59,6 +59,10 @@ class AbstractRingBuffer(object):
         if offset is None:
             offset = self.total_samples_written
         cycle, write_index = divmod(offset, self.size)
+        log.debug('Offset %d is at cycle %d, index %d', offset, cycle,
+                  write_index)
+        log.debug('Current offset is cycle %d, index %d', self.write_cycle,
+                  self.write_index)
         if self.write_cycle < cycle:
             raise ValueError('Offset too far back in time')
         return write_index
@@ -139,8 +143,9 @@ class AbstractRingBuffer(object):
             if not self._write(o, data[..., lb:ub]):
                 raise SystemError('Problem with writing data to buffer')
             samples_written += l
-            if i > 0:
+            if l == self.size:
                 self.write_cycle += 1
+                log.debug('Advancing write cycle')
 
         self.write_index = (o+l) % self.size
         self.total_samples_written += samples_written

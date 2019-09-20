@@ -364,7 +364,7 @@ class DSPBuffer(AbstractRingBuffer):
 class ReadableDSPBuffer(DSPBuffer):
 
     def _get_write_index(self):
-        index = self.circuit.get_tag(self.idx_tag)
+        index = int(self.circuit.get_tag(self.idx_tag))
         actual_index = index * self.compression / self.channels
         log.debug("%s: index raw %d, actual %d", self, index, actual_index)
         return actual_index
@@ -374,7 +374,7 @@ class ReadableDSPBuffer(DSPBuffer):
     def _get_write_cycle(self):
         if self.cycle_tag is None:
             return None
-        cycle = self.circuit.get_tag(self.cycle_tag)
+        cycle = int(self.circuit.get_tag(self.cycle_tag))
         log.debug("%s: cycle", cycle)
         return cycle
 
@@ -399,7 +399,7 @@ class WriteableDSPBuffer(DSPBuffer):
 
     def _get_read_index(self):
         # This returns the current sample that's been read
-        index = self.circuit.get_tag(self.idx_tag)
+        index = int(self.circuit.get_tag(self.idx_tag))
         return index * self.compression / self.channels
 
     read_index = property(_get_read_index)
