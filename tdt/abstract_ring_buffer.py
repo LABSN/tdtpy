@@ -126,8 +126,10 @@ class AbstractRingBuffer(object):
         write_index = self._offset_to_index(offset)
         available = self.available(offset)
         samples = data.shape[-1]
-        log.debug('%d samples available for write. Writing %d samples.',
-                  available, samples)
+        log.debug('Current write cycle %d and index %d', self.write_cycle,
+                  self.write_index)
+        log.debug('%d samples available for write starting at %d', available,
+                  samples)
 
         if samples == 0:
             return
@@ -143,12 +145,12 @@ class AbstractRingBuffer(object):
             if not self._write(o, data[..., lb:ub]):
                 raise SystemError('Problem with writing data to buffer')
             samples_written += l
-            if l == self.size:
-                self.write_cycle += 1
-                log.debug('Advancing write cycle')
 
-        self.write_index = (o+l) % self.size
-        self.total_samples_written += samples_written
+        self.total_samples_written = offset + samples_written
+        self.write_cycle, self.write_index = divmod(self.total_samples_written,
+                                                    self.size)
+        log.debug('Write %s samples. Write pointer at %d cycles, %d index.',
+                  samples_written, self.write_cycle, self.write_index)
         return samples_written
 
     def reset_read(self, index=None):
