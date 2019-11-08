@@ -146,7 +146,10 @@ class AbstractRingBuffer(object):
                 raise SystemError('Problem with writing data to buffer')
             samples_written += l
 
-        self.total_samples_written = offset + samples_written
+        if offset is not None:
+            self.total_samples_written = offset + samples_written
+        else:
+            self.total_samples_written += samples_written
         self.write_cycle, self.write_index = divmod(self.total_samples_written,
                                                     self.size)
         log.debug('Write %s samples. Write pointer at %d cycles, %d index.',
