@@ -416,10 +416,6 @@ class WriteableDSPBuffer(DSPBuffer):
     def _write(self, offset, data):
         log.debug("%s: write %d samples at %d", self, len(data), offset)
         return self._iface.WriteTagV(self.data_tag, offset, data)
-        #return self._iface.WriteTagVEX(self.data_tag, offset,
-        #                               self.vex_dest_type,
-        #                               data.astype(self.dest_type))
-
 
     def set(self, data):
         '''

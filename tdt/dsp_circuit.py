@@ -201,13 +201,13 @@ class DSPCircuit(object):
         if tag_size != 1:
             raise DSPError(self, "Tag %s is not a scalar value" % name)
         value = self._iface.GetTagVal(name)
-        if tag_type in RCX_CAST:
-            value = RCX_CAST[tag_type](value)
-        log.debug("Get %s:%s is %r", self, name, value)
 
         # The ActiveX wrapper always returns a float, regardless of whether
         # it's a bool, int or float.  Let's be sure to cast the value to the
         # correct type.
+        if tag_type in RCX_CAST:
+            value = RCX_CAST[tag_type](value)
+        log.debug("Get %s:%s is %r", self, name, value)
         return value
 
     def set_tag(self, name, value):
