@@ -23,9 +23,9 @@ for the data_tag and the circuit is checked to see if the tag exists.  For
 example, if you have `spikes`, `spikes_i`, and `spikes_n` tags in your RPvds
 circuit, you can simply initialize the class by passing only the name of the
 data tag (`spikes`) and it will automatically use `spikes_i` and `spikes_n` as
-the index and size tags, respectively.
+the index and size tags, respectively::
 
->>> buffer = circuit.get_buffer('spikes', 'r')
+   >>> buffer = circuit.get_buffer('spikes', 'r')
 
 If a required tag cannot be found (either by explicitly defining the tag name or
 automatically by adding the default extension to the data tag name), an error is
@@ -71,6 +71,17 @@ sampling rate of the DSP::
 
 Writing single channel data
 ---------------------------
+
+If you are using epoch-based outputs (where you upload a waveform of fixed size
+and halt playout once the buffer is complete), then you can use the
+`WriteableDSPBuffer.set` method::
+
+   >>> speaker_buffer = circuit.get_buffer('speaker', 'w')
+   >>> speaker_buffer.set(tone_pip)
+
+If you are using continuous output (e.g., where you need to update the stream
+as the experiment progresses)::
+
 TODO
 
 TDTPy has not been tested with writing multi-channel data (mainly because we
