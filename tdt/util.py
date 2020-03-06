@@ -25,6 +25,9 @@ import os
 import numpy as np
 import ctypes
 
+# Initialize
+import pythoncom
+
 import pywintypes
 
 from .dsp_error import DSPError
@@ -41,6 +44,7 @@ def connect_pa5(interface='GB', device_id=1, address=None):
     debug_string = '%d via %s interface' % (device_id, interface)
     log.debug(debug_string)
     try:
+        pythoncom.CoInitialize()
         if address is None:
             driver = actxobjects.PA5x()
         else:
@@ -69,6 +73,7 @@ def connect_zbus(interface='GB', address=None):
         remote server specified by the hostname, port tuple.
     '''
     try:
+        pythoncom.CoInitialize()
         if address is not None:
             driver = dsp_server.zBUSNET(address)
         else:
@@ -110,6 +115,7 @@ def connect_rpcox(name, interface='GB', device_id=1, address=None):
         If None, loads the ActiveX drivers directly, otherwise connects to the
         remote server specified by the hostname, port tuple.
     '''
+    pythoncom.CoInitialize()
     debug_string = '%s %d via %s interface' % (name, device_id, interface)
     log.debug(debug_string)
     if address is None:
@@ -172,9 +178,9 @@ def dtype_to_type_str(data_type):
         ...
     ValueError: Unsupported Numpy dtype
     '''
-    if np.issubdtype(data_type, np.int):
+    if np.issubdtype(data_type, np.integer):
         type_code = 'I'
-    elif np.issubdtype(data_type, np.float):
+    elif np.issubdtype(data_type, np.floating):
         type_code = 'F'
     else:
         raise ValueError("Unsupported Numpy dtype")
@@ -222,7 +228,7 @@ def resolution(data_type, scaling_factor):
         Scaling factor applied to data
     '''
     data_type = np.dtype(data_type)
-    if np.issubdtype(data_type, np.int):
+    if np.issubdtype(data_type, np.integer):
         return 1/float(scaling_factor)
     else:
         raise ValueError("Float data types not supported")
