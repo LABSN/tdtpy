@@ -50,4 +50,14 @@ The minimum required dependencies to run the software are:
   - pywin32
   - six
 
+-------
+License
+-------
 TDTPy is distributed under the BSD license.
+
+------------
+Contributors
+------------
+* Brad Buran (New York University, Oregon Health & Science University)
+* Eric Larson (University of Washington)
+* Decibel Therapeutics, Inc.
