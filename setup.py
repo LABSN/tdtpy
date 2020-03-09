@@ -22,10 +22,14 @@ Documentation: http://tdtpy.readthedocs.org
 
 '''
 
+version = '0.8'
+release = '0.8.0'
+name = 'TDTPy'
+
 setup(
-    name='TDTPy',
-    version='0.8.0',
-    author='Brad Buran',
+    name=name,
+    version=release,
+    author='The TDTPy development team',
     author_email='bburan@alum.mit.edu',
     packages=['tdt',
               'tdt.actxobjects',
@@ -38,4 +42,12 @@ setup(
     install_requires=['six', 'pypiwin32', 'numpy'],
     package_data={'tdt': ['components/*.rcx']},
     classifiers=CLASSIFIERS,
+    command_options={
+        'build_sphinx': {
+            'project': ('setup.py', name),
+            'version': ('setup.py', version),
+            'release': ('setup.py', release),
+            'source_dir': ('setup.py', 'docs'),
+        },
+    }
 )
