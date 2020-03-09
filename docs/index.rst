@@ -4,8 +4,12 @@ TDTPy Documentation
 Python interface for TDT equipment
 ----------------------------------
 
-:Author: **Brad Buran**
-:Copyright: 2010 to present - Brad N. Buran and Dan H. Sanes
+Contributors
+............
+
+* Brad Buran (New York University; Oregon Health & Science University)
+* Eric Larson (University of Washington)
+* Decibel Therapeutics, Inc.
 
 Work on TDTPy was supported by grant DC009237 from the `National Institute on
 Deafness and other Communication Disorders`_.

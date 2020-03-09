@@ -1,5 +1,5 @@
 :class:`tdt.DSPBuffer` -- Wrapper for RPvds buffer objects
-=========================================================
+==========================================================
 
 Each buffer requires tags linked to the data and index parameters of the buffer
 component.  All other tags described below are optional, but will be used if
