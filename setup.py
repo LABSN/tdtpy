@@ -22,13 +22,22 @@ Documentation: http://tdtpy.readthedocs.org
 
 '''
 
-version = '0.8'
-release = '0.8.0'
 name = 'TDTPy'
+
+# get the version (don't import tdt here, so dependencies are not needed)
+version = None
+with open(path.join('tdt', '__init__.py'), 'r') as fid:
+    for line in (line.strip() for line in fid):
+        if line.startswith('__version__'):
+            version = line.split('=')[1].strip().strip('\'')
+            break
+if version is None:
+    raise RuntimeError('Could not determine version')
+
 
 setup(
     name=name,
-    version=release,
+    version=version,
     author='The TDTPy development team',
     author_email='bburan@alum.mit.edu',
     packages=['tdt',
@@ -46,7 +55,7 @@ setup(
         'build_sphinx': {
             'project': ('setup.py', name),
             'version': ('setup.py', version),
-            'release': ('setup.py', release),
+            'release': ('setup.py', version),
             'source_dir': ('setup.py', 'docs'),
         },
     }
