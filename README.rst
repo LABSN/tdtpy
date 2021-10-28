@@ -45,10 +45,9 @@ library:
 
 The minimum required dependencies to run the software are:
 
-  - Python >= 2.7
+  - Python >= 3.7
   - NumPy >= 1.8
   - pywin32
-  - six
 
 -------
 License

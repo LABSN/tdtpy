@@ -1,4 +1,5 @@
-from six.moves import cStringIO as StringIO, cPickle as pickle
+from io import StringIO
+import pickle
 from tempfile import NamedTemporaryFile
 import uuid
 import socket
