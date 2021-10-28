@@ -48,7 +48,7 @@ setup(
     license='BSD (3-clause)',
     description='Module for communicating with TDT\'s System 3 hardware',
     long_description=long_description,
-    install_requires=['six', 'pypiwin32', 'numpy'],
+    install_requires=['pypiwin32', 'numpy'],
     package_data={'tdt': ['components/*.rcx']},
     classifiers=CLASSIFIERS,
     command_options={
