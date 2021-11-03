@@ -49,6 +49,9 @@ setup(
     description='Module for communicating with TDT\'s System 3 hardware',
     long_description=long_description,
     install_requires=['pypiwin32', 'numpy'],
+    extras_require={
+        'test': ['pytest'],
+    },
     package_data={'tdt': ['components/*.rcx']},
     classifiers=CLASSIFIERS,
     command_options={
