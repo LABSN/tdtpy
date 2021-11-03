@@ -9,4 +9,5 @@ from .dsp_circuit import DSPCircuit
 from .dsp_buffer import DSPBuffer
 from .dsp_error import DSPError
 
-__version__ = '0.9.0.dev0'
+from . import _version
+__version__ = _version.get_versions()['version']
