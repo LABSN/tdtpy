@@ -215,6 +215,11 @@ class DSPBuffer(AbstractRingBuffer):
     def _write(self, offset, data):
         raise NotImplementedError
 
+    def set_size(self, size):
+        if not self._iface.SetTagVal(self.size_tag, size):
+            raise DSPError(self, "Unable to set buffer size to %d" % size)
+        self._update_size()
+
     def _update_size(self):
         '''
         Query current state of buffer (size and current index).  If data
@@ -462,9 +467,7 @@ class WriteableDSPBuffer(DSPBuffer):
             mesg = "Cannot write %d samples to buffer" % size
             raise DSPError(self, mesg)
         if self.size_tag is not None:
-            if not self._iface.SetTagVal(self.size_tag, size):
-                raise DSPError(self, "Unable to set buffer size to %d" % size)
-            self._update_size()
+            self.set_size(size)
         elif size != self.size:
             mesg = "Buffer size cannot be configured"
             raise DSPError(self, mesg)
