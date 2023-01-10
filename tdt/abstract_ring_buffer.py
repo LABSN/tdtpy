@@ -15,8 +15,8 @@ def span(old_cycle, old_idx, new_cycle, new_idx, buffer_size):
     '''
     Returns the number of slots between new_idx and old_idx given buffer size.
     '''
-    start = (old_cycle * buffer_size) + old_idx
-    end = (new_cycle * buffer_size) + new_idx
+    start = int((old_cycle * buffer_size) + old_idx)
+    end = int((new_cycle * buffer_size) + new_idx)
     if (start > end):
         raise ValueError('Start sample higher than end sample')
     if (end - start) > buffer_size:
