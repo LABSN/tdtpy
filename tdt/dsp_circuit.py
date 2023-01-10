@@ -101,6 +101,7 @@ class DSPCircuit(object):
         '''
         # Note that ClearCOF alone does not apear to reset all variables to
         # default value, so we reload the circuit as well.
+        self._iface.Halt()
         if not self._iface.ClearCOF():
             mesg = "Unable to clear %s buffers" % self
             raise DSPError(self, mesg)
