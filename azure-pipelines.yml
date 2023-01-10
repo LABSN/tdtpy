@@ -12,22 +12,20 @@ jobs:
 - job:
   displayName: Windows
   pool:
-    vmImage: 'vs2017-win2016'
+    vmImage: 'windows-latest'
   strategy:
     matrix:
       Python37:
-        python.version: '3.7'
-      Python38:
         python.version: '3.8'
-      Python39:
-        python.version: '3.9'
+      Python311:
+        python.version: '3.11'
 
   steps:
   - script: |
       call "%CONDA%\Scripts\activate" base
       echo "##vso[task.setvariable variable=PATH]%CONDA%\Scripts;%PATH%"
     displayName: Add conda to PATH and activate conda base
-  - script: conda install -n base python=%PYTHON_VERSION% numpy
+  - script: conda install -n base -c conda-forge python=%PYTHON_VERSION% numpy pywin32
     displayName: Setup conda environment
   - bash: |
       python --version
