@@ -413,9 +413,7 @@ class ReadableDSPBuffer(DSPBuffer):
     def _get_write_cycle(self):
         if self.cycle_tag is None:
             return None
-        cycle = int(self.circuit.get_tag(self.cycle_tag))
-        log.debug("%s: cycle", cycle)
-        return cycle
+        return int(self.circuit.get_tag(self.cycle_tag))
 
     write_cycle = property(_get_write_cycle)
 
@@ -446,9 +444,7 @@ class WriteableDSPBuffer(DSPBuffer):
     def _get_read_cycle(self):
         if self.cycle_tag is None:
             return None
-        cycle = self.circuit.get_tag(self.cycle_tag)
-        log.debug("%s: cycle", cycle)
-        return cycle
+        return self.circuit.get_tag(self.cycle_tag)
 
     read_cycle = property(_get_read_cycle)
 
