@@ -17,16 +17,16 @@ jobs:
     matrix:
       Python37:
         python.version: '3.7'
-      Python311:
+      Python3:
         python.version: '3.11'
 
   steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '$(python.version)'
-      architecture: 'x64'
-      addToPath: true
-    displayName: 'Get Python'
+  - script: |
+      call "%CONDA%\Scripts\activate" base
+      echo "##vso[task.setvariable variable=PATH]%CONDA%\Scripts;%PATH%"
+    displayName: Add conda to PATH and activate conda base
+  - script: conda install -n base -c conda-forge python=%PYTHON_VERSION% numpy
+    displayName: Setup conda environment
   - bash: |
       python --version
       python setup.py install
