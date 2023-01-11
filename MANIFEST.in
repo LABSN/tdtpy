@@ -1,5 +1,0 @@
-include *.txt
-recursive-include docs *.txt
-include *.rst
-recursive-include docs *.rst
-recursive-include tdt/components *.rcx
