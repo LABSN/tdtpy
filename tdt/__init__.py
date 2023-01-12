@@ -11,7 +11,7 @@ from .dsp_buffer import DSPBuffer
 from .dsp_error import DSPError
 
 try:
-    __version__ = version("tdt")
+    __version__ = version("TDTPy")
 except PackageNotFoundError:
     # package is not installed
     __version__ = '0.0.0'

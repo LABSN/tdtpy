@@ -25,7 +25,7 @@ to this folder (and rename it to something more appropriate).
 .. note::
 
     The RPcoX.py file has been modified by hand to optimize certain method calls
-    (ReadTagV and ReadTagVEX).  See `Brad Buran's post` for more detail.  
+    (ReadTagV and ReadTagVEX).  See `Brad Buran's post` for more detail.
 
 .. _`Brad Buran's post`:  http://bradburan.com/2011/03/speeding-up-readtagv-and-readtagvex/
 '''
