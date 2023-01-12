@@ -1,1 +1,14 @@
-v0.7, April 22, 2011 -- Initial release
+# Version 0.7
+Initial release. Versions 0.7.1 ... 0.7.4 are mainly maintenance releases to fix documentation, build pipelines, and versioning issues.
+
+# Version 0.8.0
+Add support for continuous writes.
+
+# Version 0.8.1
+Fix some minor issues with the build process.
+
+# Version 0.9.0
+Add support for decimating data via the RPvdsEx circuit if the `dec_factor` tag is present.
+
+# Version 0.10.0
+Add support for detecting buffer underruns and overruns on the RPvdsEx circuit. 

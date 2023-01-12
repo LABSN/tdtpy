@@ -11,14 +11,19 @@ def wrap(length, offset, buffer_size):
         return ((offset, length), )
 
 
-def pending(old_idx, new_idx, buffer_size):
+def span(old_cycle, old_idx, new_cycle, new_idx, buffer_size):
     '''
     Returns the number of slots between new_idx and old_idx given buffer size.
     '''
-    if new_idx < old_idx:
-        return int(buffer_size-old_idx+new_idx)
-    else:
-        return int(new_idx-old_idx)
+    start = int((old_cycle * buffer_size) + old_idx)
+    end = int((new_cycle * buffer_size) + new_idx)
+    if (start > end):
+        log.info('Start sample %d (C %d, I %d), end sample %d (C %d, I %d), buffer %d',
+                 start, old_cycle, old_idx, end, new_cycle, new_idx, buffer_size)
+        raise ValueError('Start sample higher than end sample')
+    if (end - start) > buffer_size:
+        raise ValueError('Number of slots exceeds buffer size')
+    return end-start
 
 
 class AbstractRingBuffer(object):
@@ -46,32 +51,34 @@ class AbstractRingBuffer(object):
     # This should be read_cycle * size + read_index
     total_samples_read = 0
 
-    # This tracks the current index in the buffer. Note that read_index and
+    # This tracks the current index in the buffer. The read_index and
     # write_index may be overriden as property getter/setters in subclasses.
     read_index = 0
     write_index = 0
 
-    # This tracks the current "loop" of the buffer.
-    write_cycle = 0
+    # This tracks the current "loop" of the buffer. The read_cycle and
+    # write_cycle may be overridden as property getter/setters in subclasses.
     read_cycle = 0
+    write_cycle = 0
 
     def _offset_to_index(self, offset):
         if offset is None:
             offset = self.total_samples_written
-        cycle, write_index = divmod(offset, self.size)
-        log.debug('Offset %d is at cycle %d, index %d', offset, cycle,
+        write_cycle, write_index = divmod(offset, self.size)
+        log.debug('Offset %d is at cycle %d, index %d', offset, write_cycle,
                   write_index)
         log.debug('Current offset is cycle %d, index %d', self.write_cycle,
                   self.write_index)
-        if self.write_cycle < cycle:
+        if self.write_cycle < write_cycle:
             raise ValueError('Offset too far back in time')
-        return write_index
+        return write_cycle, write_index
 
     def pending(self):
         '''
         Number of filled slots waiting to be read
         '''
-        return pending(self.read_index, self.write_index, self.size)
+        return span(self.read_cycle, self.read_index, self.write_cycle,
+                       self.write_index, self.size)
 
     def blocks_pending(self):
         '''
@@ -89,12 +96,16 @@ class AbstractRingBuffer(object):
             If specified, return number of samples relative to offset. Offset
             is relative to beginning of acquisition.
         '''
-        write_index = self._offset_to_index(offset)
+        write_cycle, write_index = self._offset_to_index(offset)
         if (self.total_samples_written == 0) and (self.read_index == 0):
             return self.size
-        log.debug('Available: write index %d, read index %d, size %d',
-                  write_index, self.read_index, self.size)
-        return pending(write_index, self.read_index, self.size)
+        log.debug('Available: write cycle %d index %d, '
+                  'read cycle %d index %d, size %d',
+                  write_cycle, write_index, self.read_cycle, self.read_index,
+                  self.size)
+        return self.size - \
+            span(self.read_cycle, self.read_index,
+                    write_cycle, write_index, self.size)
 
     def blocks_available(self):
         return int(self.available()/self.block_size)*self.block_size
@@ -103,12 +114,15 @@ class AbstractRingBuffer(object):
         return self.read(self.pending())
 
     def read(self, samples=None):
-        if samples is None:
-            samples = self.blocks_pending()
-        elif samples > self.pending():
-            mesg = 'Attempt to read %r samples failed because only ' + \
-                   '%r slots are available for read'
-            raise ValueError(mesg % (samples, self.pending()))
+        try:
+            if samples is None:
+                samples = self.blocks_pending()
+            elif samples > self.pending():
+                mesg = 'Attempt to read %r samples failed because only ' + \
+                    '%r slots are available for read'
+                raise ValueError(mesg % (samples, self.pending()))
+        except ValueError:
+            raise IOError('Read was too slow and unread samples were overwritten')
 
         data = self._get_empty_array(samples)
         samples_read = 0
@@ -123,8 +137,11 @@ class AbstractRingBuffer(object):
         return data
 
     def write(self, data, offset=None):
-        write_index = self._offset_to_index(offset)
-        available = self.available(offset)
+        write_cycle, write_index = self._offset_to_index(offset)
+        try:
+            available = self.available(offset)
+        except ValueError:
+            raise IOError('Write was too slow and old samples were regenerated')
         samples = data.shape[-1]
         log.debug('Current write cycle %d and index %d', self.write_cycle,
                   self.write_index)
@@ -150,8 +167,8 @@ class AbstractRingBuffer(object):
             self.total_samples_written = offset + samples_written
         else:
             self.total_samples_written += samples_written
-        self.write_cycle, self.write_index = divmod(self.total_samples_written,
-                                                    self.size)
+        self.write_cycle, self.write_index = \
+            divmod(self.total_samples_written, self.size)
         log.debug('Write %s samples. Write pointer at %d cycles, %d index.',
                   samples_written, self.write_cycle, self.write_index)
         return samples_written

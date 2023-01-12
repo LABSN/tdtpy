@@ -35,7 +35,8 @@ class DSPBuffer(AbstractRingBuffer):
 
     def __init__(self, circuit, data_tag, idx_tag=None, size_tag=None,
                  sf_tag=None, cycle_tag=None, dec_tag=None, block_size=1,
-                 src_type='float32', dest_type='float32', channels=1):
+                 src_type='float32', dest_type='float32', channels=1,
+                 dec_factor=None):
 
         if data_tag not in circuit.tags:
             raise ValueError("%s: Does not have data tag %s"
@@ -47,64 +48,27 @@ class DSPBuffer(AbstractRingBuffer):
         self._iface = circuit._iface
         self._zbus = circuit._zbus
         self.data_tag = data_tag
-        self.size_tag = size_tag
         self.channels = channels
         self.block_size = int(block_size)
 
-        if size_tag is None:
-            tag = data_tag + '_n'
-            if tag in circuit.tags:
-                size_tag = tag
-                log.debug("%s: found size_tag %s", self, self.size_tag)
-        elif size_tag not in circuit.tags:
-            raise ValueError("size_tag not found in circuit")
-        self.size_tag = size_tag
+        self.size_tag = self.find_tag(size_tag, '_n', True, 'size')
+        self.idx_tag = self.find_tag(idx_tag, '_i', True, 'index')
+        self.sf_tag = self.find_tag(sf_tag, '_sf', False, 'scaling factor')
+        self.cycle_tag = self.find_tag(cycle_tag, '_c', False, 'cycles')
+        self.dec_tag = self.find_tag(dec_tag, '_d', False, 'decimation')
+        self.sf = self.get_tag(self.sf_tag, 1, 'scaling factor')
 
-        if idx_tag is None:
-            idx_tag = data_tag + '_i'
-            log.debug("%s: attempting to find idx_tag %s", self, idx_tag)
-        if idx_tag not in circuit.tags:
-            raise ValueError("Index tag must be present in circuit")
-        self.idx_tag = idx_tag
+        if dec_factor is not None:
+            if self.dec_tag is not None:
+                self.circuit.set_tag(self.dec_tag, dec_factor)
+            elif dec_factor != 1:
+                m = 'Decimation tag for %s must be available to set ' \
+                    'decimation factor to %d' % (self.data_tag, dec_factor)
+                raise ValueError(m)
 
-        # Determine scaling factor if the scaling_factor tag is available
-        if sf_tag is None:
-            tag = data_tag + '_sf'
-            if tag in circuit.tags:
-                sf_tag = tag
-                log.debug("%s: found sf_tag %s", self, sf_tag)
-        self.sf_tag = sf_tag
-        if self.sf_tag is not None:
-            self.sf = self.circuit.get_tag(self.sf_tag)
-            log.debug("%s: scaling factor is %d", self, self.sf)
-        else:
-            self.sf = 1
-            log.debug("%s: no scaling factor found, using default", self)
-
-        if cycle_tag is None:
-            tag = data_tag + '_c'
-            if tag in circuit.tags:
-                cycle_tag = tag
-                log.debug("%s: found cycle_tag %s", self, cycle_tag)
-            else:
-                log.debug("%s: no cycle tag found", self)
-        self.cycle_tag = cycle_tag
-
-        # Compute sampling frequency of data stored in buffer given the
-        # decimation factor
-        if dec_tag is None:
-            tag = data_tag + '_d'
-            if tag in circuit.tags:
-                dec_tag = tag
-                log.debug("%s: found dec_tag %s", self, dec_tag)
-        self.dec_tag = dec_tag
-        if self.dec_tag is not None:
-            self.dec_factor = self.circuit.get_tag(self.dec_tag)
-            self.fs = circuit.fs/float(self.dec_factor)
-        else:
-            self.dec_factor = 1
-            self.fs = circuit.fs
-        log.debug("%s: decimation factor is %d", self, self.dec_factor)
+        self.dec_factor = self.get_tag(self.dec_tag, 1, 'decimation factor')
+        self.fs = circuit.fs / float(self.dec_factor)
+        log.debug('%s: Sampling rate %f', self, self.fs)
 
         # Numpy's dtype function is quite powerful and accepts a variety of
         # strings as well as other dtype objects and returns the right answer.
@@ -147,6 +111,76 @@ class DSPBuffer(AbstractRingBuffer):
         # Spit out debugging information
         log.debug('Initialized %s', self._get_debug_info())
 
+    def find_tag(self, tag, default_prefix, required, name):
+        '''
+        Locates tag that tracks a feature of the buffer
+
+        Parameters
+        ----------
+        tag : {None, str}
+            Name provided by the end-user code
+        default_prefix : str
+            Prefix to append to the data tag name to create the default tag
+            name for the feature.
+        required : bool
+            If the tag is required and it is missing, raise an error.
+            Otherwise, return None.
+        name : str
+            What the tag represents. Used by the logging and exception
+            machinery to create a useful message.
+
+        Returns
+        -------
+        tag_name : {None, str}
+            Name of tag. If no tag found and it is not required, return None.
+
+        Raises
+        ------
+        ValueError
+            If tag cannot be found and it is required.
+        '''
+        # If no name was provided create a default one.
+        if tag is None:
+            tag = self.data_tag + default_prefix
+
+        # If tag exists, return it.
+        if tag in self.circuit.tags:
+            log.debug("%s: found %s tag %s", self, name, tag)
+            return tag
+
+        # If we have reached this point, the tag is missing. If it was
+        # required, raise an error.
+        if required:
+            m = '%s tag for %s must be present in circuit' % (name, self)
+            raise ValueError(m)
+        log.debug('%s: no tag found for %s', self, name)
+
+    def get_tag(self, tag, default, name):
+        '''
+        Returns value of tag that tracks a feature of the buffer
+
+        Parameters
+        ----------
+        tag : {None, str}
+            Name provided by the end-user code
+        default : {int, float}
+            Default value of feature if tag is missing.
+        name : str
+            What the tag represents. Used by the logging and exception
+            machinery to create a useful message.
+
+        Returns
+        -------
+        value : {int, float}
+            Value of tag. If no tag is present, default is returned.
+        '''
+        if tag is None:
+            log.debug('%s: %s is %r (default)', self, name, default)
+            return default
+        value = self.circuit.get_tag(tag)
+        log.debug('%s: %s is %r', self, name, value)
+        return value
+
     def _get_debug_info(self):
         attr_strings = ['{0}: {1}'.format(*a)
                         for a in self.attributes().items()]
@@ -180,6 +214,11 @@ class DSPBuffer(AbstractRingBuffer):
 
     def _write(self, offset, data):
         raise NotImplementedError
+
+    def set_size(self, size):
+        if not self._iface.SetTagVal(self.size_tag, size):
+            raise DSPError(self, "Unable to set buffer size to %d" % size)
+        self._update_size()
 
     def _update_size(self):
         '''
@@ -374,9 +413,7 @@ class ReadableDSPBuffer(DSPBuffer):
     def _get_write_cycle(self):
         if self.cycle_tag is None:
             return None
-        cycle = int(self.circuit.get_tag(self.cycle_tag))
-        log.debug("%s: cycle", cycle)
-        return cycle
+        return int(self.circuit.get_tag(self.cycle_tag))
 
     write_cycle = property(_get_write_cycle)
 
@@ -407,9 +444,7 @@ class WriteableDSPBuffer(DSPBuffer):
     def _get_read_cycle(self):
         if self.cycle_tag is None:
             return None
-        cycle = self.circuit.get_tag(self.cycle_tag)
-        log.debug("%s: cycle", cycle)
-        return cycle
+        return self.circuit.get_tag(self.cycle_tag)
 
     read_cycle = property(_get_read_cycle)
 
@@ -428,9 +463,7 @@ class WriteableDSPBuffer(DSPBuffer):
             mesg = "Cannot write %d samples to buffer" % size
             raise DSPError(self, mesg)
         if self.size_tag is not None:
-            if not self._iface.SetTagVal(self.size_tag, size):
-                raise DSPError(self, "Unable to set buffer size to %d" % size)
-            self._update_size()
+            self.set_size(size)
         elif size != self.size:
             mesg = "Buffer size cannot be configured"
             raise DSPError(self, mesg)
