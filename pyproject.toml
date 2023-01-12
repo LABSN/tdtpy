@@ -7,11 +7,11 @@ readme = "README.rst"
 authors = [
     {name = "Brad Buran", email = "bburan@alum.mit.edu"},
     {name = "Brad Buran", email = "info@bradburan.com"},
-    {name = "Eric Larson"},
+    {name = "Eric Larson", email = "larson.eric.d@gmail.com"},
 ]
 maintainers = [
     {name = "Brad Buran", email="bburan@alum.mit.edu"},
-    {name = "Eric Larson"},
+    {name = "Eric Larson", email = "larson.eric.d@gmail.com"},
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -23,8 +23,10 @@ classifiers = [
 ]
 
 dependencies = [
-	"pywin32",
-	"numpy",
+    "pywin32",
+    "numpy",
+    "packaging",
+    "importlib_metadata; python_version < '3.8'",
 ]
 dynamic = ["version"]
 

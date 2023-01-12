@@ -21,7 +21,7 @@ jobs:
           environment-file: 'environment.yml'
       - run: |
           python --version
-          python setup.py install
+          pip install -ve .
         name: Install tdtpy
       - run: |
           python -c "import tdt; print(tdt)"
