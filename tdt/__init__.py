@@ -11,7 +11,7 @@ from .dsp_buffer import DSPBuffer
 from .dsp_error import DSPError
 
 try:
-    __version__ = version("mne_bids_pipeline")
+    __version__ = version("tdt")
 except PackageNotFoundError:
     # package is not installed
     pass
