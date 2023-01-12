@@ -1,0 +1,32 @@
+name: Checks
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number }}-${{ github.event.ref }}
+  cancel-in-progress: true
+
+on: [push, pull_request]
+
+jobs:
+  tests:
+    name: Windows
+    runs-on: "windows-latest"
+    strategy:
+      matrix:
+        python: ['3.8', '3.11']
+    steps:
+      - uses: actions/checkout@v3
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: 'tdt'
+          python-version: ${{ matrix.PYTHON_VERSION }}
+          environment-file: 'environment.yml'
+      - run: |
+          python --version
+          python setup.py install
+        name: Install tdtpy
+      - run: |
+          python -c "import tdt; print(tdt)"
+        name: Import tdt
+      - run: |
+          python -c "import tdt; print(tdt.__version__); assert 'dev' in tdt.__version__"
+        name: Check versioning
+        if: "!contains(github.event.head_commit.message, '[version skip]')"
