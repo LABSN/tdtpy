@@ -27,5 +27,6 @@ jobs:
           python -c "import tdt; print(tdt)"
         name: Import tdt
       - run: |
-          python -c "import tdt; assert tdt.__version__.endswith('dev0'), tdt.__version__"
+          python -c "import tdt; print(tdt.__version__); assert tdt.__version__.endswith('dev0'), tdt.__version__"
         name: Check versioning
+        if: "!contains(github.event.head_commit.message, '[version skip]')"
