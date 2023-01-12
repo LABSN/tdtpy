@@ -19,13 +19,13 @@ jobs:
           activate-environment: 'mne'
           python-version: ${{ matrix.PYTHON_VERSION }}
           environment-file: 'environment.yml'
-    - run: |
-        python --version
-        python setup.py install
-      name: Install tdtpy
-    - run: |
-        python -c "import tdt; print(tdt)"
-      name: Import tdt
-    - run: |
-        python -c "import tdt; assert tdt.__version__.endswith('dev0'), tdt.__version__"
-      name: Check versioning
+      - run: |
+          python --version
+          python setup.py install
+        name: Install tdtpy
+      - run: |
+          python -c "import tdt; print(tdt)"
+        name: Import tdt
+      - run: |
+          python -c "import tdt; assert tdt.__version__.endswith('dev0'), tdt.__version__"
+        name: Check versioning
