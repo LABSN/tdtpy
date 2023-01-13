@@ -26,7 +26,7 @@ def span(old_cycle, old_idx, new_cycle, new_idx, buffer_size):
     return end-start
 
 
-class AbstractRingBuffer(object):
+class AbstractRingBuffer:
     '''
     Subclasses must provide the following attributes (either by setting them in
     the __init__ method or providing property getter/setters):
@@ -76,9 +76,11 @@ class AbstractRingBuffer(object):
     def pending(self):
         '''
         Number of filled slots waiting to be read
+
         '''
+        self.latch()
         return span(self.read_cycle, self.read_index, self.write_cycle,
-                       self.write_index, self.size)
+                    self.write_index, self.size)
 
     def blocks_pending(self):
         '''
@@ -96,6 +98,7 @@ class AbstractRingBuffer(object):
             If specified, return number of samples relative to offset. Offset
             is relative to beginning of acquisition.
         '''
+        self.latch()
         write_cycle, write_index = self._offset_to_index(offset)
         if (self.total_samples_written == 0) and (self.read_index == 0):
             return self.size
@@ -114,6 +117,13 @@ class AbstractRingBuffer(object):
         return self.read(self.pending())
 
     def read(self, samples=None):
+        '''
+        Parameters
+        ----------
+        samples : int
+            Number of samples to read. If None, read all samples acquired since
+            last call to read.
+        '''
         try:
             if samples is None:
                 samples = self.blocks_pending()
@@ -143,10 +153,8 @@ class AbstractRingBuffer(object):
         except ValueError:
             raise IOError('Write was too slow and old samples were regenerated')
         samples = data.shape[-1]
-        log.debug('Current write cycle %d and index %d', self.write_cycle,
-                  self.write_index)
-        log.debug('%d samples available for write starting at %d', available,
-                  samples)
+        log.debug('Current write cycle %d and index %d with %d samples available to write',
+                  self.write_cycle, self.write_index, available)
 
         if samples == 0:
             return

@@ -13,7 +13,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class DSPCircuit(object):
+class DSPCircuit:
     '''
     Wrapper around the TDT ActiveX object, RPCo.X.
 
@@ -39,15 +39,23 @@ class DSPCircuit(object):
         Connect to the address specified as a two-tuple in (host, port) format
         using the network-aware proxy of TDT's driver.  If None, defaults to
         the TDT implementation of the RPcoX and zBUSx drivers.
+    latch_trigger : {None, 1, 2, 3, 4}
+        Trigger used for latching values when we need to capture a snapshot of
+        some tags at a given point in time. This is used by DSPBuffer to
+        eliminate race conditions when reading the value of the cycle and index
+        tags. If the tags are not latched, then it's possible to read the index
+        tag, then by the time the cycle tag is read the index has wrapped
+        around to the beginning of the buffer.
     '''
-
     def __init__(self, circuit_name, device_name, interface='GB', device_id=1,
-                 load=True, start=False, fs=None, address=None):
+                 load=True, start=False, fs=None, address=None,
+                 latch_trigger=None):
         self.device_name = device_name
         self.name = split(circuit_name)[1]
         self.device_id = device_id
         self.server_address = address
         self.interface = interface
+        self.latch_trigger = latch_trigger
 
         # Hint for Matlab users: _iface is the same COM object a Matlab user
         # typically works with when they call actxserver('RPco.X').  It
@@ -333,6 +341,7 @@ class DSPCircuit(object):
         log.debug('Trigger %r %s', trigger, mode)
 
     def get_buffer(self, data_tag, mode, *args, **kw):
+        kw.setdefault('latch_trigger', self.latch_trigger)
         if mode == 'w':
             return WriteableDSPBuffer(self, data_tag, *args, **kw)
         elif mode == 'r':

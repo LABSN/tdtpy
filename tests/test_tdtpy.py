@@ -16,7 +16,7 @@ def project():
 
 @pytest.fixture
 def circuit(project):
-    circuit = project.load_circuit('RZ6-debugging.rcx', 'RZ6', 1)
+    circuit = project.load_circuit('RZ6-debugging.rcx', 'RZ6', 1, latch_trigger=1)
     circuit.start()
     yield circuit
     circuit.stop()
@@ -32,21 +32,14 @@ def ai1(circuit):
     return circuit.get_buffer('ai1', 'r')
 
 
-@pytest.fixture
-def ai3(circuit):
-    # This tag can be downsampled
-    return circuit.get_buffer('ai3', 'r', dec_factor=4)
-
-
 def test_circuit_load(circuit):
     circuit.start()
     circuit.stop()
 
 
-def test_buffer_fs(ao1, ai1, ai3):
+def test_buffer_fs(ao1, ai1):
     assert ao1.fs == BASE_FS
     assert ai1.fs == BASE_FS
-    assert ai3.fs == (BASE_FS / 4)
 
 
 def test_circuit_write_read(project, ao1, ai1):
@@ -57,17 +50,21 @@ def test_circuit_write_read(project, ao1, ai1):
     time.sleep(1)
 
     # There is a two-sample delay in the circuit
-    read_samples = ai1.read()[0, 2:n+2]
+    read_samples = ai1.read()[0, :n]
     np.testing.assert_allclose(write_samples, read_samples)
 
 
 def test_buffer_detect_dec_factor(circuit):
     # The default decimation factor is 8 by default
-    ai3 = circuit.get_buffer('ai3', 'r')
-    assert ai3.fs == (BASE_FS / 8)
+    ai_dec1 = circuit.get_buffer('ai_dec1', 'r')
+    assert ai_dec1.fs == (BASE_FS / 8)
 
 
-def test_circuit_write_read_dec(project, ao1, ai3):
+@pytest.mark.parametrize("dec_factor", [1, 2, 4, 8])
+def test_circuit_write_read_dec(project, circuit, ao1, dec_factor):
+    ai_dec = circuit.get_buffer('ai_dec1', 'r', dec_factor=dec_factor)
+    assert ai_dec.fs == (BASE_FS / dec_factor)
+
     n = round(ao1.fs / 10)
     t = np.arange(n) / ao1.fs
     write_samples = np.sin(2 * np.pi * 50 * t)
@@ -76,14 +73,10 @@ def test_circuit_write_read_dec(project, ao1, ai3):
     project.trigger('A', 'high')
     time.sleep(0.1)
 
-    n_dec = int(n / 4)
+    n_dec = int(n / dec_factor)
 
-    # I'm not sure why we need to discard the first sample here.
-    read_samples_dec = ai3.read()[0, 1:n_dec+1]
-
-    # Due to the two-sample delay, we need to decimate the write
-    # buffer starting at sample two.
-    write_samples_dec = write_samples[2::4]
+    read_samples_dec = ai_dec.read()[0, :n_dec]
+    write_samples_dec = write_samples[::dec_factor][:n_dec]
     np.testing.assert_allclose(write_samples_dec, read_samples_dec)
 
 
@@ -107,7 +100,7 @@ def test_circuit_incremential_write_read(project, ao1, ai1):
     write = np.concatenate(write, axis=-1)
     read = np.concatenate(read, axis=-1)[0]
     # Be sure to correct for 2 sample delay
-    np.testing.assert_allclose(write, read[2:len(write)+2])
+    np.testing.assert_allclose(write, read[:len(write)])
 
 
 def test_circuit_write_too_slow(project, ao1):
