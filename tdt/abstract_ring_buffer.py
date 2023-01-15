@@ -35,33 +35,18 @@ class AbstractRingBuffer:
 
         * read_index
         * write_index
+        * read_cycle
+        * write_cycle
         * size
         * channels
         * block_size
+        * total_samples_written
+        * total_samples_read
 
     Also, provide implementation of the following methods:
         * _read(self, offset, length)
         * _write(self, offset, data)
-
-    The following attributes provide information on the state of the buffer:
-        * total_samples_written
-        * total_samples_read
     '''
-    # This should be write_cycle * size + write_index
-    total_samples_written = 0
-
-    # This should be read_cycle * size + read_index
-    total_samples_read = 0
-
-    # This tracks the current index in the buffer. The read_index and
-    # write_index may be overriden as property getter/setters in subclasses.
-    read_index = 0
-    write_index = 0
-
-    # This tracks the current "loop" of the buffer. The read_cycle and
-    # write_cycle may be overridden as property getter/setters in subclasses.
-    read_cycle = 0
-    write_cycle = 0
 
     def _offset_to_index(self, offset):
         if offset is None:
