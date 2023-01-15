@@ -22,6 +22,8 @@ def span(old_cycle, old_idx, new_cycle, new_idx, buffer_size):
                  start, old_cycle, old_idx, end, new_cycle, new_idx, buffer_size)
         raise ValueError('Start sample higher than end sample')
     if (end - start) > buffer_size:
+        log.info('Start sample %d (C %d, I %d), end sample %d (C %d, I %d), buffer %d',
+                 start, old_cycle, old_idx, end, new_cycle, new_idx, buffer_size)
         raise ValueError('Number of slots exceeds buffer size')
     return end-start
 
