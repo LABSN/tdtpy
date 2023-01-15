@@ -1,6 +1,8 @@
 import logging
 log = logging.getLogger(__name__)
 
+import numpy as np
+
 
 def wrap(length, offset, buffer_size):
     if (offset+length) > buffer_size:
@@ -121,16 +123,10 @@ class AbstractRingBuffer:
         except ValueError:
             raise IOError('Read was too slow and unread samples were overwritten')
 
-        data = self._get_empty_array(samples)
-        samples_read = 0
-        for i, (o, l) in enumerate(wrap(samples, self.read_index, self.size)):
-            data[..., samples_read:samples_read+l] = self._read(o, l)
-            samples_read += l
-            if i > 0:
-                self.read_cycle += 1
-
-        self.read_index = (o+l) % self.size
-        self.total_samples_read += samples_read
+        data = [self._read(o, l) for o, l in wrap(samples, self.read_index, self.size)]
+        data = np.concatenate(data, axis=-1)
+        self.total_samples_read += samples
+        self.read_cycle, self.read_index = divmod(self.total_samples_read, self.size)
         return data
 
     def write(self, data, offset=None):
