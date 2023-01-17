@@ -111,6 +111,12 @@ dec_tag : defaults to data_tag_d (optional)
     Tag indicating decimation factor.  Used to compute sampling frequency of
     data stored in buffer: e.g. if circuit runs at 100 kHz, but you only
     sample every 25 cycles, the actual sampling frequency is 4 kHz.  
+latch_trigger : {None, 1, 2, 3, 4}
+    The _c and _i (buffer cycle and buffer index) tags should be
+    passed through a latch to avoid race conditions when reading these
+    values as each read is a separate call. This indicates which
+    software trigger is connected to the latch in the RPvdsEx circuit.
+    If None, no trigger will be fired.
     
 Additional Parameters
 ----------------------

@@ -1,6 +1,8 @@
 import logging
 log = logging.getLogger(__name__)
 
+import numpy as np
+
 
 def wrap(length, offset, buffer_size):
     if (offset+length) > buffer_size:
@@ -22,44 +24,31 @@ def span(old_cycle, old_idx, new_cycle, new_idx, buffer_size):
                  start, old_cycle, old_idx, end, new_cycle, new_idx, buffer_size)
         raise ValueError('Start sample higher than end sample')
     if (end - start) > buffer_size:
+        log.info('Start sample %d (C %d, I %d), end sample %d (C %d, I %d), buffer %d',
+                 start, old_cycle, old_idx, end, new_cycle, new_idx, buffer_size)
         raise ValueError('Number of slots exceeds buffer size')
     return end-start
 
 
-class AbstractRingBuffer(object):
+class AbstractRingBuffer:
     '''
     Subclasses must provide the following attributes (either by setting them in
     the __init__ method or providing property getter/setters):
 
         * read_index
         * write_index
+        * read_cycle
+        * write_cycle
         * size
         * channels
         * block_size
+        * total_samples_written
+        * total_samples_read
 
     Also, provide implementation of the following methods:
         * _read(self, offset, length)
         * _write(self, offset, data)
-
-    The following attributes provide information on the state of the buffer:
-        * total_samples_written
-        * total_samples_read
     '''
-    # This should be write_cycle * size + write_index
-    total_samples_written = 0
-
-    # This should be read_cycle * size + read_index
-    total_samples_read = 0
-
-    # This tracks the current index in the buffer. The read_index and
-    # write_index may be overriden as property getter/setters in subclasses.
-    read_index = 0
-    write_index = 0
-
-    # This tracks the current "loop" of the buffer. The read_cycle and
-    # write_cycle may be overridden as property getter/setters in subclasses.
-    read_cycle = 0
-    write_cycle = 0
 
     def _offset_to_index(self, offset):
         if offset is None:
@@ -76,9 +65,11 @@ class AbstractRingBuffer(object):
     def pending(self):
         '''
         Number of filled slots waiting to be read
+
         '''
+        self.latch()
         return span(self.read_cycle, self.read_index, self.write_cycle,
-                       self.write_index, self.size)
+                    self.write_index, self.size)
 
     def blocks_pending(self):
         '''
@@ -96,6 +87,7 @@ class AbstractRingBuffer(object):
             If specified, return number of samples relative to offset. Offset
             is relative to beginning of acquisition.
         '''
+        self.latch()
         write_cycle, write_index = self._offset_to_index(offset)
         if (self.total_samples_written == 0) and (self.read_index == 0):
             return self.size
@@ -114,6 +106,13 @@ class AbstractRingBuffer(object):
         return self.read(self.pending())
 
     def read(self, samples=None):
+        '''
+        Parameters
+        ----------
+        samples : int
+            Number of samples to read. If None, read all samples acquired since
+            last call to read.
+        '''
         try:
             if samples is None:
                 samples = self.blocks_pending()
@@ -124,16 +123,10 @@ class AbstractRingBuffer(object):
         except ValueError:
             raise IOError('Read was too slow and unread samples were overwritten')
 
-        data = self._get_empty_array(samples)
-        samples_read = 0
-        for i, (o, l) in enumerate(wrap(samples, self.read_index, self.size)):
-            data[..., samples_read:samples_read+l] = self._read(o, l)
-            samples_read += l
-            if i > 0:
-                self.read_cycle += 1
-
-        self.read_index = (o+l) % self.size
-        self.total_samples_read += samples_read
+        data = [self._read(o, l) for o, l in wrap(samples, self.read_index, self.size)]
+        data = np.concatenate(data, axis=-1)
+        self.total_samples_read += samples
+        self.read_cycle, self.read_index = divmod(self.total_samples_read, self.size)
         return data
 
     def write(self, data, offset=None):
@@ -143,10 +136,8 @@ class AbstractRingBuffer(object):
         except ValueError:
             raise IOError('Write was too slow and old samples were regenerated')
         samples = data.shape[-1]
-        log.debug('Current write cycle %d and index %d', self.write_cycle,
-                  self.write_index)
-        log.debug('%d samples available for write starting at %d', available,
-                  samples)
+        log.debug('Current write cycle %d and index %d with %d samples available to write',
+                  self.write_cycle, self.write_index, available)
 
         if samples == 0:
             return

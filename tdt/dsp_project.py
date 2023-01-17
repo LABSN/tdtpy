@@ -21,7 +21,7 @@ class DSPProject(object):
         self.server_address = address
         atexit.register(self.stop)
 
-    def load_circuit(self, circuit_name, device_name, device_id=1):
+    def load_circuit(self, circuit_name, device_name, device_id=1, **kw):
         '''
         Load the circuit to the specified device
 
@@ -45,7 +45,7 @@ class DSPProject(object):
         circuit = DSPCircuit(circuit_name, device_name,
                              address=self.server_address,
                              interface=self._interface,
-                             device_id=device_id)
+                             device_id=device_id, **kw)
         self._circuits[device_name] = circuit
         return circuit
 

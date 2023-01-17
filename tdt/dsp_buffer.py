@@ -36,7 +36,7 @@ class DSPBuffer(AbstractRingBuffer):
     def __init__(self, circuit, data_tag, idx_tag=None, size_tag=None,
                  sf_tag=None, cycle_tag=None, dec_tag=None, block_size=1,
                  src_type='float32', dest_type='float32', channels=1,
-                 dec_factor=None):
+                 dec_factor=None, latch_trigger=None):
 
         if data_tag not in circuit.tags:
             raise ValueError("%s: Does not have data tag %s"
@@ -50,6 +50,7 @@ class DSPBuffer(AbstractRingBuffer):
         self.data_tag = data_tag
         self.channels = channels
         self.block_size = int(block_size)
+        self.latch_trigger = latch_trigger
 
         self.size_tag = self.find_tag(size_tag, '_n', True, 'size')
         self.idx_tag = self.find_tag(idx_tag, '_i', True, 'index')
@@ -110,6 +111,10 @@ class DSPBuffer(AbstractRingBuffer):
 
         # Spit out debugging information
         log.debug('Initialized %s', self._get_debug_info())
+
+    def latch(self):
+        if self.latch_trigger is not None:
+            self.circuit.trigger(self.latch_trigger)
 
     def find_tag(self, tag, default_prefix, required, name):
         '''
@@ -402,6 +407,12 @@ class DSPBuffer(AbstractRingBuffer):
 
 class ReadableDSPBuffer(DSPBuffer):
 
+    def __init__(self, *args, **kw):
+        super().__init__(*args, **kw)
+        self.read_index = 0
+        self.read_cycle = 0
+        self.total_samples_read = 0
+
     def _get_write_index(self):
         index = int(self.circuit.get_tag(self.idx_tag))
         actual_index = index * self.compression / self.channels
@@ -433,6 +444,12 @@ class ReadableDSPBuffer(DSPBuffer):
 
 
 class WriteableDSPBuffer(DSPBuffer):
+
+    def __init__(self, *args, **kw):
+        super().__init__(*args, **kw)
+        self.write_index = 0
+        self.write_cycle = 0
+        self.total_samples_written = 0
 
     def _get_read_index(self):
         # This returns the current sample that's been read
