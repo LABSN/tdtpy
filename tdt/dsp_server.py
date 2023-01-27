@@ -10,7 +10,10 @@ import logging
 import os
 
 # Required so that sphinx can build this on readthedocs.org
-from . import actxobjects
+try:
+    from . import actxobjects
+except Exception:
+    pass
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -120,6 +123,7 @@ class TDTRPCServer(object):
     '''
 
     def __init__(self, address, connections=2, interface='GB'):
+        from . import actxobjects
         self._connections = 2
         self._server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._server.bind(address)
@@ -175,6 +179,7 @@ class TDTRPCServer(object):
         log.info('client from %s:%s connected', host, port)
 
     def handle_read(self, sock):
+        from . import actxobjects
         mid, (uuid, driver, command, args) = read(sock)
         log.info('RPC request %s from %s', command, uuid)
         if command.startswith('Connect'):

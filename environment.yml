@@ -6,3 +6,6 @@ dependencies:
 - pip
 - numpy
 - pywin32
+- packaging
+- setuptools
+- setuptools_scm

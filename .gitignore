@@ -1,3 +1,5 @@
+tdt/version.py
+
 *.pyc
 *.pyo
 *.so

@@ -26,12 +26,8 @@ import numpy as np
 import ctypes
 
 # Initialize
-import pythoncom
-
-import pywintypes
-
 from .dsp_error import DSPError
-from . import dsp_server, actxobjects
+from . import dsp_server
 
 import logging
 log = logging.getLogger(__name__)
@@ -41,6 +37,9 @@ def connect_pa5(interface='GB', device_id=1, address=None):
     '''
     Connect to the PA5
     '''
+    import pythoncom
+    import pywintypes
+    from . import actxobjects
     debug_string = '%d via %s interface' % (device_id, interface)
     log.debug(debug_string)
     try:
@@ -72,6 +71,9 @@ def connect_zbus(interface='GB', address=None):
         If None, loads the ActiveX drivers directly, otherwise connects to the
         remote server specified by the hostname, port tuple.
     '''
+    import pythoncom
+    import pywintypes
+    from . import actxobjects
     try:
         pythoncom.CoInitialize()
         if address is not None:
@@ -115,6 +117,8 @@ def connect_rpcox(name, interface='GB', device_id=1, address=None):
         If None, loads the ActiveX drivers directly, otherwise connects to the
         remote server specified by the hostname, port tuple.
     '''
+    import pythoncom
+    from . import actxobjects
     pythoncom.CoInitialize()
     debug_string = '%s %d via %s interface' % (name, device_id, interface)
     log.debug(debug_string)
