@@ -33,7 +33,7 @@ class DSPBuffer(AbstractRingBuffer):
         'n_slots_max', 'n_samples_max', 'size_max', 'channels',
         'block_size']
 
-    def __init__(self, circuit, data_tag, idx_tag=None, size_tag=None,
+    def __init__(self, circuit, data_tag, lock, idx_tag=None, size_tag=None,
                  sf_tag=None, cycle_tag=None, dec_tag=None, block_size=1,
                  src_type='float32', dest_type='float32', channels=1,
                  dec_factor=None, latch_trigger=None):
@@ -51,6 +51,7 @@ class DSPBuffer(AbstractRingBuffer):
         self.channels = channels
         self.block_size = int(block_size)
         self.latch_trigger = latch_trigger
+        self.lock = lock
 
         self.size_tag = self.find_tag(size_tag, '_n', True, 'size')
         self.idx_tag = self.find_tag(idx_tag, '_i', True, 'index')
@@ -415,9 +416,7 @@ class ReadableDSPBuffer(DSPBuffer):
 
     def _get_write_index(self):
         index = int(self.circuit.get_tag(self.idx_tag))
-        actual_index = index * self.compression / self.channels
-        log.debug("%s: index raw %d, actual %d", self, index, actual_index)
-        return actual_index
+        return index * self.compression / self.channels
 
     write_index = property(_get_write_index)
 
