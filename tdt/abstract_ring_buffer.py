@@ -67,9 +67,10 @@ class AbstractRingBuffer:
         Number of filled slots waiting to be read
 
         '''
-        self.latch()
-        return span(self.read_cycle, self.read_index, self.write_cycle,
-                    self.write_index, self.size)
+        with self.lock:
+            self.latch()
+            return span(self.read_cycle, self.read_index, self.write_cycle,
+                        self.write_index, self.size)
 
     def blocks_pending(self):
         '''
@@ -87,17 +88,18 @@ class AbstractRingBuffer:
             If specified, return number of samples relative to offset. Offset
             is relative to beginning of acquisition.
         '''
-        self.latch()
-        write_cycle, write_index = self._offset_to_index(offset)
-        if (self.total_samples_written == 0) and (self.read_index == 0):
-            return self.size
-        log.debug('Available: write cycle %d index %d, '
-                  'read cycle %d index %d, size %d',
-                  write_cycle, write_index, self.read_cycle, self.read_index,
-                  self.size)
-        return self.size - \
-            span(self.read_cycle, self.read_index,
-                    write_cycle, write_index, self.size)
+        with self.lock:
+            self.latch()
+            write_cycle, write_index = self._offset_to_index(offset)
+            if (self.total_samples_written == 0) and (self.read_index == 0):
+                return self.size
+            log.debug('Available: write cycle %d index %d, '
+                    'read cycle %d index %d, size %d',
+                    write_cycle, write_index, self.read_cycle, self.read_index,
+                    self.size)
+            return self.size - \
+                span(self.read_cycle, self.read_index,
+                        write_cycle, write_index, self.size)
 
     def blocks_available(self):
         return int(self.available()/self.block_size)*self.block_size

@@ -3,6 +3,8 @@ import atexit
 import numpy as np
 import time
 
+from threading import Lock
+
 from .util import get_cof_path, connect_zbus, connect_rpcox
 from .dsp_buffer import ReadableDSPBuffer, WriteableDSPBuffer
 from .convert import convert
@@ -56,6 +58,7 @@ class DSPCircuit:
         self.server_address = address
         self.interface = interface
         self.latch_trigger = latch_trigger
+        self.lock = Lock()
 
         # Hint for Matlab users: _iface is the same COM object a Matlab user
         # typically works with when they call actxserver('RPco.X').  It
@@ -342,6 +345,7 @@ class DSPCircuit:
 
     def get_buffer(self, data_tag, mode, *args, **kw):
         kw.setdefault('latch_trigger', self.latch_trigger)
+        kw.setdefault('lock', self.lock)
         if mode == 'w':
             return WriteableDSPBuffer(self, data_tag, *args, **kw)
         elif mode == 'r':
