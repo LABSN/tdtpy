@@ -12,3 +12,12 @@ Add support for decimating data via the RPvdsEx circuit if the `dec_factor` tag 
 
 # Version 0.10.0
 Add support for detecting buffer underruns and overruns on the RPvdsEx circuit. 
+
+# Version 0.10.1
+Adds bugfix for check of index and cycle tags. Add AudioIn and AudioOut macros.
+
+# Version 0.10.2
+Fix bug where incorrect tag was being read to check buffer index in DSP.
+
+# Version 0.10.3
+Fix race condition when checking cycle and index tags in a multi-threaded environment.
