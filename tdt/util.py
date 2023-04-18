@@ -57,32 +57,42 @@ def connect_pa5(interface='GB', device_id=1, address=None):
         raise ImportError('ActiveX drivers from TDT not installed')
 
 
-def connect_zbus(interface='GB', address=None):
+def connect_zbus(interface='USB3', address=None):
     '''
     Connect to the zBUS interface and set the zBUS A and zBUS B triggers to low
 
     Parameters
     ----------
-    interface : {'GB', 'USB'}
+    interface : {'GB', 'USB', 'USB3'}
         Type of interface (depends on the card that you have from TDT). See the
         TDT ActiveX documentation for clarification on which interface you
-        would be using if you are still unsure.
+        would be using if you are still unsure. I'm not sure this actually does
+        anything as I have tried different strings without getting an error.
     address : {None, (hostname, port)}
         If None, loads the ActiveX drivers directly, otherwise connects to the
         remote server specified by the hostname, port tuple.
+
+    Note
+    ----
+    As of April 2023, the ActiveX library was updated to support issues with
+    connecting to the zBUS using the USB3 interface. Even if the ConnectZBUS
+    call is successful, it will still return an error. Thus, we have no way of
+    verifying that we really connected to the zBUS until we attempt to connect
+    to the RZ6 or another device.
     '''
     import pythoncom
     import pywintypes
     from . import actxobjects
     try:
+        # This is required to initialize the ActiveX libraries if we are using
+        # multiple threads.
         pythoncom.CoInitialize()
         if address is not None:
             driver = dsp_server.zBUSNET(address)
         else:
             driver = actxobjects.ZBUSx()
-        if not driver.ConnectZBUS(interface):
-            raise DSPError("zBUS", "Connection failed")
-        log.debug("Connected to zBUS")
+        driver.ConnectZBUS(interface):
+        log.debug("Connected to zBUS (probably)")
 
         # zBUS trigger is set to high for record mode, so ensure that both
         # triggers are initialized to low.
