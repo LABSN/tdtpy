@@ -24,6 +24,7 @@ of the server via a tuple (hostname, port)::
 import os
 import numpy as np
 import ctypes
+import winreg
 
 # Initialize
 from .dsp_error import DSPError
@@ -33,15 +34,33 @@ import logging
 log = logging.getLogger(__name__)
 
 
-def connect_pa5(interface='GB', device_id=1, address=None):
+# See `connect_zbus` for explanation.
+ZBUS_CONNECTIONS = {}
+
+
+def get_interface(interface):
+    # The default interface is stored in the windows registry. In general, we
+    # should favor using this interface but I have left the ability for
+    # end-users to override the interface by passing in a different value to
+    # support backwards compatibility with legacy code and/or potential
+    # edge-cases where the user needs to override the interface.
+    if interface is None:
+        hive = winreg.ConnectRegistry(None, winreg.HKEY_LOCAL_MACHINE)
+        key = winreg.OpenKey(hive, r'SOFTWARE\WOW6432Node\TDT\TDT Drivers')
+        return winreg.QueryValueEx(key, 'INTERFACE')[0]
+    return interface
+
+
+def connect_pa5(interface=None, device_id=1, address=None):
     '''
     Connect to the PA5
     '''
     import pythoncom
     import pywintypes
     from . import actxobjects
-    debug_string = '%d via %s interface' % (device_id, interface)
-    log.debug(debug_string)
+
+    interface = get_interface(interface)
+    log.debug('%d via %s interface', device_id, interface)
     try:
         pythoncom.CoInitialize()
         if address is None:
@@ -57,7 +76,7 @@ def connect_pa5(interface='GB', device_id=1, address=None):
         raise ImportError('ActiveX drivers from TDT not installed')
 
 
-def connect_zbus(interface='USB3', address=None):
+def connect_zbus(interface=None, address=None):
     '''
     Connect to the zBUS interface and set the zBUS A and zBUS B triggers to low
 
@@ -83,6 +102,17 @@ def connect_zbus(interface='USB3', address=None):
     import pythoncom
     import pywintypes
     from . import actxobjects
+
+    interface = get_interface(interface)
+
+    # For some reason, newer versions of the ActiveX library (or possibly
+    # specific to the USB3 interface) cause issues if we initialize the ZBUSx
+    # object after initializing the RPcoX object. To avoid these issues, just
+    # store the handle in a ZBUS_CONNECTIONS dictionary and return that if it
+    # has already been initialized.
+    if (interface, address) in ZBUS_CONNECTIONS:
+        return ZBUS_CONNECTIONS[interface, address]
+
     try:
         # This is required to initialize the ActiveX libraries if we are using
         # multiple threads.
@@ -91,7 +121,7 @@ def connect_zbus(interface='USB3', address=None):
             driver = dsp_server.zBUSNET(address)
         else:
             driver = actxobjects.ZBUSx()
-        driver.ConnectZBUS(interface):
+        driver.ConnectZBUS(interface)
         log.debug("Connected to zBUS (probably)")
 
         # zBUS trigger is set to high for record mode, so ensure that both
@@ -100,12 +130,14 @@ def connect_zbus(interface='USB3', address=None):
         driver.zBusTrigB(0, 2, 10)
         log.debug("Set zBusTrigA to low")
         log.debug("Set zBusTrigB to low")
+
+        ZBUS_CONNECTIONS[interface, address] = driver
         return driver
     except pywintypes.com_error:
         raise ImportError('ActiveX drivers from TDT not installed')
 
 
-def connect_rpcox(name, interface='GB', device_id=1, address=None):
+def connect_rpcox(name, interface=None, device_id=1, address=None):
     '''
     Connect to the specifed device using the RPcoX driver
 
@@ -116,10 +148,11 @@ def connect_rpcox(name, interface='GB', device_id=1, address=None):
     ----------
     name : {'RZ6', 'RZ5', 'RP2', ... (any valid device string) }
         Name of device (as defined by the corresponding RPcoX.Connect* method).
-    interface : {'GB', 'USB'}
+    interface : {None, 'GB', 'USB', 'USB3'}
         Type of interface (depends on the card that you have from TDT). See the
         TDT ActiveX documentation for clarification on which interface you
-        would be using if you are still unsure.
+        would be using if you are still unsure. None enables auto-detection of
+        the interface.
     device_id : int (default 1)
         Id of device in the rack.  Only applicable if you have more than one of
         the same device (e.g. two RX6 devices).
@@ -130,8 +163,9 @@ def connect_rpcox(name, interface='GB', device_id=1, address=None):
     import pythoncom
     from . import actxobjects
     pythoncom.CoInitialize()
-    debug_string = '%s %d via %s interface' % (name, device_id, interface)
-    log.debug(debug_string)
+
+    interface = get_interface(interface)
+    log.debug('%s %d via %s interface', name, device_id, interface)
     if address is None:
         driver = actxobjects.RPcoX()
     else:
@@ -286,6 +320,7 @@ def shmem_as_ndarray(raw_array):
         'version': 3,
     }
     return np.asarray(d).view(dtype=dtype)
+
 
 if __name__ == '__main__':
     import doctest

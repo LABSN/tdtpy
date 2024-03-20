@@ -26,10 +26,10 @@ class DSPCircuit:
         Path to circuit file.
     device_name : string
         Device to load circuit to.
-    interface : {'GB', 'USB'}
+    interface : {None, 'GB', 'USB', 'USB3'}
         Interface to use (see TDT's ActiveX documentation on the Connect*
-        methods for more information).  You almost certainly want 'GB' (which
-        is the default value).
+        methods for more information). Set to None to enable auto-detection
+        of the interface.
     device_id : number
         ID of device
     load : boolean (optional)
@@ -49,7 +49,7 @@ class DSPCircuit:
         tag, then by the time the cycle tag is read the index has wrapped
         around to the beginning of the buffer.
     '''
-    def __init__(self, circuit_name, device_name, interface='GB', device_id=1,
+    def __init__(self, circuit_name, device_name, interface=None, device_id=1,
                  load=True, start=False, fs=None, address=None,
                  latch_trigger=None):
         self.device_name = device_name

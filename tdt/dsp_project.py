@@ -13,7 +13,7 @@ class DSPProject(object):
     method.
     '''
 
-    def __init__(self, address=None, interface='GB'):
+    def __init__(self, address=None, interface=None):
         self._circuit_info = {}
         self._circuits = {}
         self._zbus = connect_zbus(interface=interface, address=address)
