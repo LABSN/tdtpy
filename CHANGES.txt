@@ -21,3 +21,6 @@ Fix bug where incorrect tag was being read to check buffer index in DSP.
 
 # Version 0.10.3
 Fix race condition when checking cycle and index tags in a multi-threaded environment.
+
+# Version 0.10.4
+Add support for the UZ3 interface. TDTpy should now auto-detect which interface is available and set the connection flag accordingly.
